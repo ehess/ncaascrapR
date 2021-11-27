@@ -13,7 +13,7 @@ ncaa_box_score <- function(game_id) {
   # Check the result
   #check_status(res)
   
-  bs.json <- fromJSON(full_url, flatten = TRUE)
+  bs.json <- jsonlite::fromJSON(full_url, flatten = TRUE)
   
   bs.df <- as.data.frame(bs.json$tables)
   
@@ -44,8 +44,8 @@ ncaa_box_score <- function(game_id) {
     group_by(playerid) %>% 
     mutate(playerName = trimws(first(display))) %>% 
     ungroup() %>% 
-    select(-playerid) %>%
-    filter(is.na(playerCategory))
+    dplyr::select(-playerid) %>%
+    dplyr::filter(is.na(playerCategory))
   
   #Clarify duplicate column names
   formatted$headerdisplay <- apply(formatted, 1, function(x) {
@@ -68,13 +68,13 @@ ncaa_box_score <- function(game_id) {
   })
   
   #Remove total fields, only focus on players
-  no.total <- formatted %>% pivot_wider(names_from = .data$headerdisplay, values_from = .data$display) %>% 
-    separate(`Passing.CP-ATT-INT`, c("PassingComp", "PassingAtt", "PassingInt"), "-") %>% 
-    separate(`FG-FGA`, c("FG", "FGA"), "/") %>% 
-    filter(is.na(total)) %>% 
-    select(-c(headerClass, playerCategory, total, id, headerColor))
+  no.total <- formatted %>% tidyr::pivot_wider(names_from = .data$headerdisplay, values_from = .data$display) %>% 
+    tidyr::separate(.data$`Passing.CP-ATT-INT`, c("PassingComp", "PassingAtt", "PassingInt"), "-") %>% 
+    #tidyr::separate(.data$`FG-FGA`, c("FG", "FGA"), "/") %>% 
+    dplyr::filter(is.na(total)) %>% 
+    dplyr::select(-c(headerClass, playerCategory, total, id, headerColor))
   
-  no.total[,2:38] <- sapply(no.total[,2:38],as.numeric)
+  no.total[,2:34] <- sapply(no.total[,2:34],as.numeric)
   no.total[is.na(no.total)] <- 0
   
   final <- no.total %>% 

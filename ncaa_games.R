@@ -21,7 +21,7 @@ ncaa_games <- function(week, year) {
   # Check the result
   #check_status(res)
   
-  games.json <- fromJSON(full_url, flatten = TRUE)
+  games.json <- jsonlite::fromJSON(full_url, flatten = TRUE)
   
   games <- games.json$games
   
@@ -36,8 +36,9 @@ ncaa_games <- function(week, year) {
     return(home.conf)
   })
   
-  games.final <- games %>% separate(game.url, c("empty", "game", "game.id"), "/", remove = FALSE) %>%
-    select(-c(game.away.conferences, game.home.conferences, empty, game)) %>%
+  games.final <- games %>% 
+    tidyr::separate(game.url, c("empty", "game", "game.id"), "/", remove = FALSE) %>%
+    dplyr::select(-c(game.away.conferences, game.home.conferences, empty, game)) %>%
     janitor::clean_names()
   
   return(games.final)

@@ -14,10 +14,10 @@ ncaa_game_info <- function(game_id) {
   #check_status(res)
   
 
-  info.json <- fromJSON(full_url, flatten = TRUE)
-  info.df <- as.data.frame(unlist(info.json)) %>% rownames_to_column(var = "name") %>% 
-    rename(value = .data$`unlist(info.json)`) %>%
-    pivot_wider(names_from = .data$name, values_from = .data$value) %>% janitor::clean_names()
+  info.json <- jsonlite::fromJSON(full_url, flatten = TRUE)
+  info.df <- as.data.frame(unlist(info.json)) %>% tibble::rownames_to_column(var = "name") %>% 
+    dplyr::rename(value = .data$`unlist(info.json)`) %>%
+    tidyr::pivot_wider(names_from = .data$name, values_from = .data$value) %>% janitor::clean_names()
   
   return(info.df)
 }

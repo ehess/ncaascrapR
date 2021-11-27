@@ -13,7 +13,7 @@ ncaa_scoring_summary <- function(game_id) {
   # Check the result
   #check_status(res)
   
-  scoring.json <- fromJSON(full_url, flatten = TRUE)
+  scoring.json <- jsonlite::fromJSON(full_url, flatten = TRUE)
   
   scores <- as.data.frame(scoring.json$periods)
   summary.df <- scores %>%
@@ -23,9 +23,11 @@ ncaa_scoring_summary <- function(game_id) {
     dplyr::mutate(series_order = row_number()) %>%
     janitor::clean_names()
   
-  meta.data.df <- as.data.frame(scoring.json$meta$teams) %>% select(id, homeTeam, shortname)
+  meta.data.df <- as.data.frame(scoring.json$meta$teams) %>% 
+    dplyr::select(id, homeTeam, shortname)
   scoring.summary.final <- merge(summary.df, meta.data.df, by.x = "team_id", by.y = "id")
-  scoring.summary.final <- scoring.summary.final %>% arrange(series_order) %>% 
+  scoring.summary.final <- scoring.summary.final %>% 
+    arrange(series_order) %>% 
     janitor::clean_names()
   
   return(scoring.summary.final)
