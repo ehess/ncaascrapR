@@ -26,5 +26,5 @@ ncaa_vb_team_box_score <- function(game_id) {
   
   bs.final <- base::merge(bs.team, bs.meta, by.x = "teamId", by.y = "id")
   
-  return(bs.team)
+  return(bs.final)
 }
