@@ -16,12 +16,15 @@ ncaa_vb_team_box_score <- function(game_id) {
   bs.json <- jsonlite::fromJSON(full_url, flatten = TRUE)
   
   bs.df <- as.data.frame(bs.json$teams)
+  bs.meta <- as.data.frame(bs.json$meta$teams)
   
   bs.team <- bs.df %>%
     purrr::map_if(is.data.frame, list) %>%
     dplyr::as_tibble() %>%
     tidyr::unnest(.data$sets, names_repair = "unique") %>%
     dplyr::select(teamId, setNumber, kills, attackErrors, hittingPercentage, attackAttempts)
+  
+  bs.final <- base::merge(bs.team, bs.meta, by.x = "teamId", by.y = "id")
   
   return(bs.team)
 }
