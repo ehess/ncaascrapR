@@ -1,5 +1,5 @@
 
-ncaa_games <- function(week, year) {
+ncaa_fb_games <- function(week, year) {
   assertthat::assert_that(is.numeric(year) & nchar(year) == 4,
                           msg = 'Enter valid year as a number (YYYY)')
   if(!is.null(week)){

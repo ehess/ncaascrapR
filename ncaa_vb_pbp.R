@@ -1,0 +1,26 @@
+
+ncaa_vb_pbp <- function(game_id) {
+  base_url <- "https://data.ncaa.com/casablanca/game/"
+  
+  full_url <- paste(base_url, game_id, "pbp.json", sep="/")
+  
+  # Check for internet
+  #check_internet()
+  
+  # Create the GET request and set response as res
+  res <- httr::GET(full_url)
+  
+  # Check the result
+  #check_status(res)
+  
+  pbp.json <- jsonlite::fromJSON(full_url, flatten = TRUE)
+  
+  pbp.df <- as.data.frame(pbp.json$periods)
+  
+  pbp <- pbp.df %>%
+    purrr::map_if(is.data.frame, list) %>%
+    dplyr::as_tibble() %>%
+    tidyr::unnest(.data$playStats)
+  
+  return(pbp)
+}

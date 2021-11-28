@@ -1,5 +1,5 @@
 
-ncaa_team_stats <- function(game_id) {
+ncaa_fb_team_stats <- function(game_id) {
   base_url <- "https://data.ncaa.com/casablanca/game/"
   
   full_url <- paste(base_url, game_id, "teamStats.json", sep="/")

@@ -1,5 +1,5 @@
 
-ncaa_box_score <- function(game_id) {
+ncaa_fb_box_score <- function(game_id) {
   base_url <- "https://data.ncaa.com/casablanca/game/"
   
   full_url <- paste(base_url, game_id, "boxscore.json", sep="/")

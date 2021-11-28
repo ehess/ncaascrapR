@@ -1,5 +1,6 @@
-
-ncaa_game_info <- function(game_id) {
+#This function is the exact same as ncaa_vb_game_info
+#TODO: consider combining these to use one shared set of code
+ncaa_fb_game_info <- function(game_id) {
   base_url <- "https://data.ncaa.com/casablanca/game/"
   
   full_url <- paste(base_url, game_id, "gameInfo.json", sep="/")
