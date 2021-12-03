@@ -9,14 +9,13 @@ library(logging)
 library(dplyr)
 column <- function(x, css) x %>% html_node(css = css) %>% html_text()
 
-# ncaa_vb_pbp <- function(game_id) {
-game_id = 5168298
+ncaa_vb_pbp <- function(game_id) {
   base_url <- "https://stats.ncaa.org/game/play_by_play"
 
   full_url <- paste(base_url, game_id, sep="/")
 
   # Check for internet
-  #check_internet()
+  # check_internet()
 
   # Create the GET request and set response as res
   # res <- httr::GET(full_url)
@@ -119,12 +118,19 @@ game_id = 5168298
     ) %>%
     fill(score, .direction = "down") %>%
     separate(score, into = c("away_score", "home_score"), extra = "merge") %>%
-    groupby()
-
-  View(plays)
-
-
-
-  # return(data.frame())
-# }
+    group_by(rally_number) %>%
+    mutate(
+      rally_play_number = row_number()
+    ) %>%
+    ungroup() %>%
+    mutate(
+      rally_play_number = case_when(
+        grepl("Sub", action_type) == TRUE ~ as.integer(NA),
+        grepl("Start", action_type) == TRUE ~ as.integer(NA),
+        grepl("Timeout", action_type) == TRUE ~ as.integer(NA),
+        TRUE ~ rally_play_number
+      )
+    )
+  return(plays)
+}
 # ncaa_vb_pbp(5168298)
