@@ -7,7 +7,7 @@ library(jsonlite)
 library(stringr)
 library(logging)
 library(dplyr)
-# game_id = 5168298
+
 ncaa_vb_pbp <- function(game_id) {
   base_url <- "https://stats.ncaa.org/game/play_by_play"
 
@@ -54,6 +54,8 @@ ncaa_vb_pbp <- function(game_id) {
         (nchar(home_action) == 0 & nchar(away_action) > 0) ~ away_action,
         TRUE ~ ""
       ),
+      action = gsub("\\+","", action),
+      action = str_trim(action, "both"),
       action_team = case_when(
         (nchar(home_action) > 0 & nchar(away_action) == 0) ~ "home",
         (nchar(home_action) == 0 & nchar(away_action) > 0) ~ "away",
@@ -108,6 +110,11 @@ ncaa_vb_pbp <- function(game_id) {
     ) %>%
     fill(score, .direction = "down") %>%
     separate(score, into = c("away_score", "home_score"), extra = "merge") %>%
+    separate(action, sep = "\n", into = c("primary_action","other_actions"), extra = "merge", remove = FALSE) %>%
+    mutate(
+      primary_action = str_trim(primary_action, "both"),
+      other_actions = str_trim(other_actions, "both"),
+    ) %>%
     group_by(rally_number) %>%
     mutate(
       rally_play_number = row_number(),
@@ -139,6 +146,8 @@ ncaa_vb_pbp <- function(game_id) {
       rally_play_number,
       action_type,
       action,
+      primary_action,
+      other_actions,
       away_score,
       home_score,
       scoring_play,
