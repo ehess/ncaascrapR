@@ -60,20 +60,20 @@ ncaa_vb_pbp <- function(game_id) {
         TRUE ~ ""
       ),
       action_type = case_when(
-        grepl("Match started", action) == TRUE ~ "Match Start",
-        grepl("Match ended", action) == TRUE ~ "Match End",
-        grepl("Set started", action) == TRUE ~ "Set Start",
-        grepl("Set ended", action) == TRUE ~ "Set End",
-        grepl("timeout|Timeout", action) == TRUE ~ "Timeout",
-        grepl("Challenge|challenge", action) == TRUE ~ "Challenge",
-        grepl("Dig", action) == TRUE ~ "Dig",
-        grepl("Reception", action) == TRUE ~ "Reception",
-        grepl("serve|service", action) == TRUE ~ "Serve",
-        grepl("Set", action) == TRUE ~ "Set",
-        grepl("Attack", action) == TRUE ~ "Attack",
-        grepl("Sub in", action) == TRUE ~ "Sub In",
-        grepl("Sub out", action) == TRUE ~ "Sub Out",
-        grepl("error|Error|violation|Violation", action) == TRUE ~ "Error",
+        grepl("Match started", action) ~ "Match Start",
+        grepl("Match ended", action) ~ "Match End",
+        grepl("Set started", action) ~ "Set Start",
+        grepl("Set ended", action) ~ "Set End",
+        grepl("timeout|Timeout", action) ~ "Timeout",
+        grepl("Challenge|challenge", action) ~ "Challenge",
+        grepl("Dig", action) ~ "Dig",
+        grepl("Reception", action) ~ "Reception",
+        grepl("serve|service", action) ~ "Serve",
+        grepl("Set", action) ~ "Set",
+        grepl("Attack", action) ~ "Attack",
+        grepl("Sub in", action) ~ "Sub In",
+        grepl("Sub out", action) ~ "Sub Out",
+        grepl("error|Error|violation|Violation", action) ~ "Error",
         TRUE ~ "None"
       ),
       error = (action_type == "Error"),
@@ -101,9 +101,9 @@ ncaa_vb_pbp <- function(game_id) {
       set = ifelse(set == 0, 1, set),
       rally_number = cumsum(action_type == "Serve"),
       rally_number = case_when(
-        grepl("Sub", action_type) == TRUE ~ as.integer(NA),
-        grepl("Start", action_type) == TRUE ~ as.integer(NA),
-        grepl("Timeout", action_type) == TRUE ~ as.integer(NA),
+        grepl("Sub", action_type) ~ NA_integer_,
+        grepl("Start", action_type) ~ NA_integer_,
+        grepl("Timeout", action_type) ~ NA_integer_,
         TRUE ~ rally_number
       )
     ) %>%
@@ -141,9 +141,9 @@ ncaa_vb_pbp <- function(game_id) {
     ungroup() %>%
     mutate(
       rally_play_number = case_when(
-        grepl("Sub", action_type) == TRUE ~ as.integer(NA),
-        grepl("Start", action_type) == TRUE ~ as.integer(NA),
-        grepl("Timeout", action_type) == TRUE ~ as.integer(NA),
+        grepl("Sub", action_type) ~ NA_integer_,
+        grepl("Start", action_type) ~ NA_integer_,
+        grepl("Timeout", action_type) ~ NA_integer_,
         TRUE ~ rally_play_number
       )
     )
