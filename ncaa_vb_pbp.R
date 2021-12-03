@@ -1,11 +1,6 @@
 library(rvest)
 library(tidyverse)
-library(lubridate)
-library(glue)
-library(httr)
-library(jsonlite)
 library(stringr)
-library(logging)
 library(dplyr)
 
 ncaa_vb_pbp <- function(game_id) {
