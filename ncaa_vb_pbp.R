@@ -7,18 +7,12 @@ library(jsonlite)
 library(stringr)
 library(logging)
 library(dplyr)
-column <- function(x, css) x %>% html_node(css = css) %>% html_text()
-
+# game_id = 5168298
 ncaa_vb_pbp <- function(game_id) {
   base_url <- "https://stats.ncaa.org/game/play_by_play"
 
   full_url <- paste(base_url, game_id, sep="/")
 
-  # Check for internet
-  # check_internet()
-
-  # Create the GET request and set response as res
-  # res <- httr::GET(full_url)
   base <- rvest::read_html(full_url)
 
   play_nodes <- base %>%
@@ -95,10 +89,6 @@ ncaa_vb_pbp <- function(game_id) {
       ),
       lag_action_type = lag(action_type, default = NA),
       lead_action_type = lead(action_type, default = NA),
-      sequence_start = case_when(
-        (action_type == "Serve") ~ TRUE,
-        TRUE ~ FALSE
-      ),
       scoring_play = nchar(score) > 0,
       score = case_when(
         action_type == "Match Start" ~ "0-0",
@@ -120,7 +110,14 @@ ncaa_vb_pbp <- function(game_id) {
     separate(score, into = c("away_score", "home_score"), extra = "merge") %>%
     group_by(rally_number) %>%
     mutate(
-      rally_play_number = row_number()
+      rally_play_number = row_number(),
+      rally_start = (min(rally_play_number) == rally_play_number),
+      rally_end = (max(rally_play_number) == rally_play_number)
+    ) %>%
+    ungroup() %>%
+    group_by(set) %>%
+    mutate(
+      set_play_number = row_number(),
     ) %>%
     ungroup() %>%
     mutate(
@@ -131,6 +128,28 @@ ncaa_vb_pbp <- function(game_id) {
         TRUE ~ rally_play_number
       )
     )
+
+  plays <- plays %>%
+    select(-home_action, -away_action) %>%
+    select(
+      match_action_number,
+      set,
+      set_play_number,
+      rally_number,
+      rally_play_number,
+      action_type,
+      action,
+      away_score,
+      home_score,
+      scoring_play,
+      error,
+      error_type,
+      lag_action_type,
+      lead_action_type,
+      rally_start,
+      rally_end
+    )
+
   return(plays)
 }
-# ncaa_vb_pbp(5168298)
+ncaa_vb_pbp(5168298)
