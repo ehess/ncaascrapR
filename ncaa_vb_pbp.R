@@ -149,7 +149,6 @@ ncaa_vb_pbp <- function(game_id) {
     )
 
   plays <- plays %>%
-    select(-home_action, -away_action) %>%
     select(
       game_id,
       match_action_number,
