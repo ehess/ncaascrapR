@@ -14,6 +14,8 @@ ncaa_vb_pbp <- function(game_id) {
     html_nodes(".mytbl + .mytable") %>%
     html_nodes("tr:not(.grey_heading)")
 
+
+
   play_away_actions <- play_nodes %>%
     html_nodes("td:nth_child(1):not(:only-child)") %>%
     html_text() %>%
@@ -43,6 +45,7 @@ ncaa_vb_pbp <- function(game_id) {
 
   plays <- base_plays %>%
     mutate(
+      game_id = game_id,
       match_action_number = row_number(),
       action = case_when(
         (nchar(home_action) > 0 & nchar(away_action) == 0) ~ home_action,
@@ -68,8 +71,8 @@ ncaa_vb_pbp <- function(game_id) {
         grepl("serve|service", action) == TRUE ~ "Serve",
         grepl("Set", action) == TRUE ~ "Set",
         grepl("Attack", action) == TRUE ~ "Attack",
-        grepl("Sub|sub in", action) == TRUE ~ "Sub In",
-        grepl("Sub|sub out", action) == TRUE ~ "Sub Out",
+        grepl("Sub in", action) == TRUE ~ "Sub In",
+        grepl("Sub out", action) == TRUE ~ "Sub Out",
         grepl("error|Error|violation|Violation", action) == TRUE ~ "Error",
         TRUE ~ "None"
       ),
@@ -78,6 +81,7 @@ ncaa_vb_pbp <- function(game_id) {
         error & grepl("set|Set", action) ~ "Set",
         error & grepl("service|Service", action) ~ "Service",
         error & grepl("attack|Attack", action) ~ "Attack",
+        error & grepl("Ball|ball handling|Handling", action) ~ "Ball Handling",
         error & grepl("set|Set", action) ~ "Set",
         error & grepl("block|Block", action) ~ "Block",
         error & grepl("footfall|Footfall", action) ~ "Footfall Violation",
@@ -109,6 +113,19 @@ ncaa_vb_pbp <- function(game_id) {
     mutate(
       primary_action = str_trim(primary_action, "both"),
       other_actions = str_trim(other_actions, "both"),
+      involved_player = case_when(
+        action_type == "Serve" ~ str_extract(primary_action, "(.*)\\s+serves"),
+        action_type == "Sub In" ~ str_extract(primary_action, "in\\s+(.*)"),
+        action_type == "Sub Out" ~ str_extract(primary_action, "out\\s+(.*)"),
+        TRUE ~ str_extract(primary_action, "by\\s+(.*)")
+      ),
+      involved_player = case_when(
+        action_type == "Serve" ~ sub("\\s+serves", "", involved_player),
+        action_type == "Sub In" ~ sub("in\\s+", "", involved_player),
+        action_type == "Sub Out" ~ sub("out\\s+", "", involved_player),
+        TRUE ~ sub("by\\s+", "", involved_player)
+      ),
+      involved_player = str_trim(involved_player, "both")
     ) %>%
     group_by(rally_number) %>%
     mutate(
@@ -134,6 +151,7 @@ ncaa_vb_pbp <- function(game_id) {
   plays <- plays %>%
     select(-home_action, -away_action) %>%
     select(
+      game_id,
       match_action_number,
       set,
       set_play_number,
@@ -143,6 +161,7 @@ ncaa_vb_pbp <- function(game_id) {
       action,
       primary_action,
       other_actions,
+      involved_player,
       away_score,
       home_score,
       scoring_play,
@@ -156,4 +175,3 @@ ncaa_vb_pbp <- function(game_id) {
 
   return(plays)
 }
-ncaa_vb_pbp(5168298)
