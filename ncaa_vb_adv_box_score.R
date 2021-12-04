@@ -13,33 +13,32 @@ Mode <- function(x) {
     ux[which.max(tabulate(match(x, ux)))]
 }
 
-# ncaa_vb_adv_box_score <- function(game_id, away = "Away", home = "Home") {
-away = "Away"
-home = "Home"
-    game_id = 5168298
+ncaa_vb_adv_box_score <- function(game_id, away = "Away", home = "Home") {
+    # game_id = 5168298
     pbp <- ncaa_vb_pbp(game_id)
 
     custom_box <- pbp %>%
         mutate(
-            action_team = case_when(
-                action_team == "home" ~ home,
-                action_team == "away" ~ away,
-                TRUE ~ action_team
-            ),
             lag_home_score = lag(home_score),
             lag_away_score = lag(away_score),
             lead_home_score = lead(home_score),
             lead_away_score = lead(away_score),
             action_team_scored = case_when(
-                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == home) & (lead_home_score > home_score) ~ TRUE,
-                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == away) & (lead_home_score > home_score) ~ FALSE,
-                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == away) & (lead_away_score > away_score) ~ TRUE,
-                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == home) & (lead_away_score > away_score) ~ FALSE,
-                (action_team == home) & (lag_home_score < home_score) ~ TRUE,
-                (action_team == away) & (lag_home_score < home_score) ~ FALSE,
-                (action_team == away) & (lag_away_score < away_score) ~ TRUE,
-                (action_team == home) & (lag_away_score < away_score) ~ FALSE,
+                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == "home") & (lead_home_score > home_score) ~ TRUE,
+                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == "away") & (lead_home_score > home_score) ~ FALSE,
+                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == "away") & (lead_away_score > away_score) ~ TRUE,
+                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == "home") & (lead_away_score > away_score) ~ FALSE,
+                (action_team == "home") & (lag_home_score < home_score) ~ TRUE,
+                (action_team == "away") & (lag_home_score < home_score) ~ FALSE,
+                (action_team == "away") & (lag_away_score < away_score) ~ TRUE,
+                (action_team == "home") & (lag_away_score < away_score) ~ FALSE,
                 TRUE ~ NA,
+            ),
+            scoring_team = case_when(
+                action_team_scored ~ action_team,
+                !action_team_scored & (action_team == "home") ~ "away",
+                !action_team_scored & (action_team == "away") ~ "home",
+                TRUE ~ NA_character_
             ),
             block_conversion = case_when(
                 (action_type == "Block") & action_team_scored ~ TRUE,
@@ -47,21 +46,13 @@ home = "Home"
                 (action_type == "Error") & (error_type == "Block") ~ FALSE,
                 TRUE ~ NA
             ),
-            is_kill = (action_type == "Kill"),
-            is_attack_error = (action_type == "Error" & error_type %in% c("Ball Handling", "Block", "Set", "Attack", "Service") & !action_team_scored),
-            is_non_kill_attack = (action_type == "Attack" & lead_action_type != "Kill"),
-            is_attempt = case_when(
-                is_kill ~ TRUE,
-                is_attack_error ~ TRUE,
-                is_non_kill_attack ~ TRUE,
+            forfeit_point = case_when(
+                (action_type == "Error") & (scoring_team != action_team) ~ TRUE,
                 TRUE ~ NA
             ),
-            forfeit_point = case_when(
-                (action_type == "Error") & !action_team_scored ~ TRUE,
-                TRUE ~ NA
-            )
+            attempted_serve = (error_type == "Service") | (action_type == "Serve"),
+            successful_serve = (action_type == "Serve")
         )
-
 
     base_box <- custom_box %>%
         filter(grepl("Sub", action_type) == FALSE) %>%
@@ -74,26 +65,29 @@ home = "Home"
         ) %>%
         group_by(rally_number) %>%
         mutate(
-            ends_in_sideout = (action_team_scored) & (rally_starting_team != lead_rally_starting_team)
+            ends_in_sideout = (action_team_scored) & (scoring_team != rally_starting_team),
+            service_point = (action_team_scored) & (scoring_team == rally_starting_team)
         ) %>%
         ungroup()
 
     final_box = base_box %>%
-        group_by(action_team) %>%
+        group_by(rally_starting_team) %>%
         summarize(
-            kills = sum(is_kill, na.rm = TRUE),
-            nonkill_attacks = sum(is_non_kill_attack, na.rm = TRUE),
-            hitting_errors = sum(is_attack_error, na.rm = TRUE),
-            hits = (kills - hitting_errors),
-            attempts = sum(is_attempt, na.rm = TRUE),
-            hit_pct = hits / attempts, # does not match box score
+            serve_pct = sum(successful_serve, na.rm = TRUE) / sum(attempted_serve, na.rm = TRUE),
+            service_point_pct = sum(service_point, na.rm = TRUE) / length(unique(rally_number)),
             sideout_pct = sum(ends_in_sideout, na.rm = TRUE) / length(unique(rally_number)),
             hurtful_error_pct = sum(forfeit_point, na.rm = TRUE) / length(unique(rally_number)),
             block_win_pct = mean(block_conversion, na.rm = TRUE),
             forfeited_points = sum(forfeit_point, na.rm = TRUE),
             points = sum(action_team_scored, na.rm = TRUE)
         ) %>%
-        select(-kills, -nonkill_attacks, -hitting_errors, -hits, -attempts)
-    View(final_box)
-    # return(final_box)
-# }
+        mutate(
+            rally_starting_team = case_when(
+                rally_starting_team == "home" ~ home,
+                rally_starting_team == "away" ~ away,
+                TRUE ~ NA_character_
+            )
+        ) %>%
+        filter(~is.na(rally_starting_team))
+    return(final_box)
+}
