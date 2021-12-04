@@ -73,12 +73,13 @@ ncaa_vb_adv_box_score <- function(game_id, away = "Away", home = "Home") {
     final_box = base_box %>%
         group_by(rally_starting_team) %>%
         summarize(
+            # hit_pct = # hit_pct is something we should have but it is actually pretty hard to do?
             serve_pct = sum(successful_serve, na.rm = TRUE) / sum(attempted_serve, na.rm = TRUE),
             service_point_pct = sum(service_point, na.rm = TRUE) / length(unique(rally_number)),
             sideout_pct = sum(ends_in_sideout, na.rm = TRUE) / length(unique(rally_number)),
             hurtful_error_pct = sum(forfeit_point, na.rm = TRUE) / length(unique(rally_number)),
             block_win_pct = mean(block_conversion, na.rm = TRUE),
-            forfeited_points = sum(forfeit_point, na.rm = TRUE),
+            forfeited_points = sum(forfeit_point, na.rm = TRUE), # sometimes scoring errors are in the opponent's side of the table
             points = sum(action_team_scored, na.rm = TRUE)
         ) %>%
         mutate(
