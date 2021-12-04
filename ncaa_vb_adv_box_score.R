@@ -13,8 +13,10 @@ Mode <- function(x) {
     ux[which.max(tabulate(match(x, ux)))]
 }
 
-ncaa_vb_adv_box_score <- function(game_id, away = "Away", home = "Home") {
-    # game_id = 5168298
+# ncaa_vb_adv_box_score <- function(game_id, away = "Away", home = "Home") {
+away = "Away"
+home = "Home"
+    game_id = 5168298
     pbp <- ncaa_vb_pbp(game_id)
 
     custom_box <- pbp %>%
@@ -45,14 +47,15 @@ ncaa_vb_adv_box_score <- function(game_id, away = "Away", home = "Home") {
                 (action_type == "Error") & (error_type == "Block") ~ FALSE,
                 TRUE ~ NA
             ),
+            is_kill = (action_type == "Kill"),
+            is_attack_error = (action_type == "Error" & error_type %in% c("Ball Handling", "Block", "Set", "Attack", "Service") & !action_team_scored),
+            is_non_kill_attack = (action_type == "Attack" & lead_action_type != "Kill"),
             is_attempt = case_when(
-                (action_type == "Kill") ~ TRUE,
-                (action_type == "Error" & error_type == "Attack") ~ TRUE,
-                (action_type == "Attack") ~ TRUE,
+                is_kill ~ TRUE,
+                is_attack_error ~ TRUE,
+                is_non_kill_attack ~ TRUE,
                 TRUE ~ NA
             ),
-            is_kill = (action_type == "Kill"),
-            is_attack_error = (action_type == "Error" & error_type == "Attack"),
             forfeit_point = case_when(
                 (action_type == "Error") & !action_team_scored ~ TRUE,
                 TRUE ~ NA
@@ -78,14 +81,19 @@ ncaa_vb_adv_box_score <- function(game_id, away = "Away", home = "Home") {
     final_box = base_box %>%
         group_by(action_team) %>%
         summarize(
-            hit_pct = (sum(is_kill) - sum(is_attack_error)) / sum(is_attempt, na.rm = TRUE), # does not match box score
-            sideout_pct = mean(ends_in_sideout, na.rm = TRUE),
-            error_pct = sum(error) / length(unique(rally_number)),
-            avg_rally_length = mean(rally_total_plays),
+            kills = sum(is_kill, na.rm = TRUE),
+            nonkill_attacks = sum(is_non_kill_attack, na.rm = TRUE),
+            hitting_errors = sum(is_attack_error, na.rm = TRUE),
+            hits = (kills - hitting_errors),
+            attempts = sum(is_attempt, na.rm = TRUE),
+            hit_pct = hits / attempts, # does not match box score
+            sideout_pct = sum(ends_in_sideout, na.rm = TRUE) / length(unique(rally_number)),
+            hurtful_error_pct = sum(forfeit_point, na.rm = TRUE) / length(unique(rally_number)),
             block_win_pct = mean(block_conversion, na.rm = TRUE),
             forfeited_points = sum(forfeit_point, na.rm = TRUE),
             points = sum(action_team_scored, na.rm = TRUE)
-        )
-    # View(final_box)
-    return(final_box)
-}
+        ) %>%
+        select(-kills, -nonkill_attacks, -hitting_errors, -hits, -attempts)
+    View(final_box)
+    # return(final_box)
+# }
