@@ -14,8 +14,6 @@ ncaa_vb_pbp <- function(game_id) {
     html_nodes(".mytbl + .mytable") %>%
     html_nodes("tr:not(.grey_heading)")
 
-
-
   play_away_actions <- play_nodes %>%
     html_nodes("td:nth_child(1):not(:only-child)") %>%
     html_text() %>%
