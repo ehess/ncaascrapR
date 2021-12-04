@@ -136,8 +136,11 @@ ncaa_vb_pbp <- function(game_id) {
     group_by(rally_number) %>%
     mutate(
       rally_play_number = row_number(),
+      rally_total_plays = n(),
       rally_start = (min(rally_play_number) == rally_play_number),
-      rally_end = (max(rally_play_number) == rally_play_number)
+      rally_end = (max(rally_play_number) == rally_play_number),
+      rally_end_action_type = last(action_type),
+      rally_starting_team = first(action_team)
     ) %>%
     ungroup() %>%
     group_by(set) %>%
@@ -181,7 +184,10 @@ ncaa_vb_pbp <- function(game_id) {
       lag_action_type,
       lead_action_type,
       rally_start,
-      rally_end
+      rally_end,
+      rally_total_plays,
+      rally_end_action_type,
+      rally_starting_team
     )
 
   return(plays)
