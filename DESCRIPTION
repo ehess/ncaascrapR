@@ -1,0 +1,22 @@
+Package: ncaascrapR
+Title: Scrapes data from NCAA API's
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Akshay",
+             family = "Easwaran",
+             role = c("aut", "cre"),
+             email = "akeaswaran@me.com"),
+     person(given = "Eric",
+             family = "Hess",
+             role = c("aut", "cre"),
+             email = "eric.hess.13@gmail.com"),
+     person(given = "John",
+             family = "Edwards",
+             role = c("aut", "cre"),
+             email = "eric.hess.13@gmail.com"))
+Description: A package for working with data from the NCAA.
+Allows the user to access raw data for various sports and supplement that data with additional information.
+License: `use_mit_license()`, 
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2

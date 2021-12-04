@@ -1,23 +1,32 @@
-
+#' ncaa_fb_pbp
+#'
+#' Obtains the play by play info for a NCAA FB game
+#'
+#' @param game_id the game_id of a given NCAA FB game from the NCAA API
+#'
+#' @return a data.frame of rows for each play in the game
+#'
+#' @example ncaa_fb_pbp(5931773)
+#' @export
 
 ncaa_fb_pbp <- function(game_id) {
   base_url <- "https://data.ncaa.com/casablanca/game/"
 
   full_url <- paste(base_url, game_id, "pbp.json", sep="/")
-  
+
   # Check for internet
   #check_internet()
-  
+
   # Create the GET request and set response as res
   res <- httr::GET(full_url)
-  
+
   # Check the result
   #check_status(res)
-  
+
   pbp.json <- jsonlite::fromJSON(full_url, flatten = TRUE)
-  
+
   pbp.df <- as.data.frame(pbp.json$periods)
-  
+
   pbp <- pbp.df %>%
     purrr::map_if(is.data.frame, list) %>%
     dplyr::as_tibble() %>%
@@ -30,12 +39,12 @@ ncaa_fb_pbp <- function(game_id) {
            "team_id" = .data$teamId...3) %>%
     dplyr::mutate(play_order = row_number()) %>%
     janitor::clean_names()
-  
+
   meta.data.df <- as.data.frame(pbp.json$meta$teams) %>% select(id, homeTeam, shortname)
   pbp.final <- merge(pbp, meta.data.df, by.x = "team_id", by.y = "id")
-  pbp.final <- pbp.final %>% 
-    dplyr::arrange(play_order) %>% 
+  pbp.final <- pbp.final %>%
+    dplyr::arrange(play_order) %>%
     janitor::clean_names()
-  
+
   return(pbp.final)
 }
