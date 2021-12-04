@@ -13,30 +13,36 @@ Mode <- function(x) {
     ux[which.max(tabulate(match(x, ux)))]
 }
 
-ncaa_vb_adv_box_score <- function(game_id) {
+ncaa_vb_adv_box_score <- function(game_id, away = "Away", home = "Home") {
     # game_id = 5168298
     pbp <- ncaa_vb_pbp(game_id)
 
     custom_box <- pbp %>%
         mutate(
+            action_team = case_when(
+                action_team == "home" ~ home,
+                action_team == "away" ~ away,
+                TRUE ~ action_team
+            ),
             lag_home_score = lag(home_score),
             lag_away_score = lag(away_score),
             lead_home_score = lead(home_score),
             lead_away_score = lead(away_score),
             action_team_scored = case_when(
-                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == "home") & (lead_home_score > home_score) ~ TRUE,
-                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == "away") & (lead_home_score > home_score) ~ FALSE,
-                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == "away") & (lead_away_score > away_score) ~ TRUE,
-                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == "home") & (lead_away_score > away_score) ~ FALSE,
-                (action_team == "home") & (lag_home_score < home_score) ~ TRUE,
-                (action_team == "away") & (lag_home_score < home_score) ~ FALSE,
-                (action_team == "away") & (lag_away_score < away_score) ~ TRUE,
-                (action_team == "home") & (lag_away_score < away_score) ~ FALSE,
+                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == home) & (lead_home_score > home_score) ~ TRUE,
+                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == away) & (lead_home_score > home_score) ~ FALSE,
+                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == away) & (lead_away_score > away_score) ~ TRUE,
+                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == home) & (lead_away_score > away_score) ~ FALSE,
+                (action_team == home) & (lag_home_score < home_score) ~ TRUE,
+                (action_team == away) & (lag_home_score < home_score) ~ FALSE,
+                (action_team == away) & (lag_away_score < away_score) ~ TRUE,
+                (action_team == home) & (lag_away_score < away_score) ~ FALSE,
                 TRUE ~ NA,
             ),
             block_conversion = case_when(
                 (action_type == "Block") & action_team_scored ~ TRUE,
                 (action_type == "Block") & !action_team_scored ~ FALSE,
+                (action_type == "Error") & (error_type == "Block") ~ FALSE,
                 TRUE ~ NA
             ),
             is_attempt = case_when(
