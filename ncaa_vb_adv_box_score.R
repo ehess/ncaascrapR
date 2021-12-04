@@ -14,17 +14,24 @@ Mode <- function(x) {
 }
 
 ncaa_vb_adv_box_score <- function(game_id) {
+    # game_id = 5168298
     pbp <- ncaa_vb_pbp(game_id)
 
     custom_box <- pbp %>%
         mutate(
             lag_home_score = lag(home_score),
             lag_away_score = lag(away_score),
+            lead_home_score = lead(home_score),
+            lead_away_score = lead(away_score),
             action_team_scored = case_when(
-                (scoring_play == TRUE) & (action_team == "home") & (lag_home_score < home_score) ~ TRUE,
-                (scoring_play == TRUE) & (action_team == "away") & (lag_home_score < home_score) ~ FALSE,
-                (scoring_play == TRUE) & (action_team == "away") & (lag_away_score < away_score) ~ TRUE,
-                (scoring_play == TRUE) & (action_team == "home") & (lag_away_score < away_score) ~ FALSE,
+                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == "home") & (lead_home_score > home_score) ~ TRUE,
+                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == "away") & (lead_home_score > home_score) ~ FALSE,
+                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == "away") & (lead_away_score > away_score) ~ TRUE,
+                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == "home") & (lead_away_score > away_score) ~ FALSE,
+                (action_team == "home") & (lag_home_score < home_score) ~ TRUE,
+                (action_team == "away") & (lag_home_score < home_score) ~ FALSE,
+                (action_team == "away") & (lag_away_score < away_score) ~ TRUE,
+                (action_team == "home") & (lag_away_score < away_score) ~ FALSE,
                 TRUE ~ NA,
             ),
             block_conversion = case_when(
@@ -58,19 +65,21 @@ ncaa_vb_adv_box_score <- function(game_id) {
         ) %>%
         group_by(rally_number) %>%
         mutate(
-            ends_in_sideout = (scoring_play == TRUE) & (rally_starting_team != lead_rally_starting_team)
+            ends_in_sideout = (action_team_scored) & (rally_starting_team != lead_rally_starting_team)
         ) %>%
         ungroup()
 
     final_box = base_box %>%
         group_by(action_team) %>%
         summarize(
-            hit_pct = (sum(is_kill) - sum(is_attack_error)) / sum(is_attempt, na.rm = TRUE),
+            hit_pct = (sum(is_kill) - sum(is_attack_error)) / sum(is_attempt, na.rm = TRUE), # does not match box score
             sideout_pct = mean(ends_in_sideout, na.rm = TRUE),
+            error_pct = sum(error) / length(unique(rally_number)),
             avg_rally_length = mean(rally_total_plays),
             block_win_pct = mean(block_conversion, na.rm = TRUE),
             forfeited_points = sum(forfeit_point, na.rm = TRUE),
             points = sum(action_team_scored, na.rm = TRUE)
         )
+    # View(final_box)
     return(final_box)
 }
