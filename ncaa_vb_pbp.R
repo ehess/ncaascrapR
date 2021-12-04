@@ -155,6 +155,11 @@ ncaa_vb_pbp <- function(game_id) {
     )
 
   plays <- plays %>%
+    mutate(
+      game_id = as.integer(game_id),
+      home_score = as.integer(home_score),
+      away_score = as.integer(away_score)
+    ) %>%
     select(
       game_id,
       match_action_number,
