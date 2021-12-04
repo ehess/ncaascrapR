@@ -44,18 +44,27 @@ ncaa_vb_pbp <- function(game_id) {
   plays <- base_plays %>%
     mutate(
       game_id = game_id,
-      match_action_number = row_number(),
       action = case_when(
         (nchar(home_action) > 0 & nchar(away_action) == 0) ~ home_action,
         (nchar(home_action) == 0 & nchar(away_action) > 0) ~ away_action,
         TRUE ~ ""
       ),
       action = gsub("\\+","", action),
-      action = str_trim(action, "both"),
+      action = str_trim(action, "both")
+    ) %>%
+    filter(
+      nchar(action) > 0
+    ) %>%
+    mutate(
+      lead_action = lead(action)
+    ) %>%
+    filter(
+      !(grepl(" serves", action) & grepl(" serves an ace", lead_action))
     ) %>%
     separate(action, sep = "\n", into = c("primary_action","other_actions"), extra = "merge", remove = FALSE) %>%
     mutate(
       primary_action = str_trim(primary_action, "both"),
+      primary_action = sub("  ", " ", primary_action),
       other_actions = str_trim(other_actions, "both"),
       action_type = case_when(
         grepl("error", tolower(primary_action)) ~ "Error",
@@ -86,13 +95,13 @@ ncaa_vb_pbp <- function(game_id) {
       ),
       error = (action_type == "Error"),
       error_type = case_when(
-        (error & grepl("set", tolower(action))) ~ "Set",
-        (error & grepl("service", tolower(action))) ~ "Service",
-        error & grepl("attack", tolower(action)) ~ "Attack",
-        error & grepl("ball handling", tolower(action)) ~ "Ball Handling",
-        error & grepl("block", tolower(action)) ~ "Block",
-        error & grepl("footfall", tolower(action)) ~ "Footfall Violation",
-        error & grepl("net", tolower(action)) ~ "Net Violation",
+        error & grepl("attack", tolower(primary_action)) ~ "Attack",
+        error & grepl("ball handling", tolower(primary_action)) ~ "Ball Handling",
+        (error & grepl("set", tolower(primary_action))) ~ "Set",
+        (error & grepl("service", tolower(primary_action))) ~ "Service",
+        error & grepl("block", tolower(primary_action)) ~ "Block",
+        error & grepl("footfall", tolower(primary_action)) ~ "Footfall Violation",
+        error & grepl("net", tolower(primary_action)) ~ "Net Violation",
         TRUE ~ ""
       ),
       involved_players = case_when(
@@ -112,6 +121,7 @@ ncaa_vb_pbp <- function(game_id) {
         TRUE ~ sub("by\\s+", "", involved_players)
       ),
       involved_players = str_trim(involved_players, "both"),
+      lead_primary_action = lead(primary_action),
       lag_action_type = lag(action_type, default = NA),
       lead_action_type = lead(action_type, default = NA),
       scoring_play = nchar(score) > 0,
@@ -149,6 +159,7 @@ ncaa_vb_pbp <- function(game_id) {
     ) %>%
     ungroup() %>%
     mutate(
+      match_action_number = row_number(),
       rally_play_number = case_when(
         grepl("Sub", action_type) ~ NA_integer_,
         grepl("Start", action_type) ~ NA_integer_,
