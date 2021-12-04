@@ -1,3 +1,24 @@
+#' ncaa_vb_adv_box_score()
+#' Generates a simple advanced box score from volleyball play by play data.
+#' Features:
+#' - service point %
+#' - serve %
+#' - sideout %
+#' - hurtful error %
+#' - block win %
+#' - forfeited points
+#' - total points generated
+#'
+#' How to get a game ID:
+#' 1. find the game you want to view data for via stats.ncaa.org's scoreboard
+#' 2. open up its box score page
+#' 3. Click the play-by-play tab
+#' 4. Copy the string of numbers at the end of the URL from your browser's address bar.
+#'
+#' @param game_id the ID for the game's play_by_play data from the box score page
+#' @returns a data frame of play_by_play data for the specified game
+
+
 library(tidyverse)
 library(stringr)
 library(dplyr)
