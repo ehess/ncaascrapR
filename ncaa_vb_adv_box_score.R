@@ -110,6 +110,6 @@ ncaa_vb_adv_box_score <- function(game_id, away = "Away", home = "Home") {
                 TRUE ~ NA_character_
             )
         ) %>%
-        filter(~is.na(rally_starting_team))
+        filter(!is.na(rally_starting_team))
     return(final_box)
 }
