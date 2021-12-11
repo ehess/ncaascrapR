@@ -357,5 +357,5 @@ ncaa_vb_pbp <- function(game_id) {
       )
   }
 
-  View(plays)
+  return(plays)
 }
