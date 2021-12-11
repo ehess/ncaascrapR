@@ -222,6 +222,7 @@ ncaa_vb_pbp <- function(game_id) {
       ),
       involved_players = str_trim(involved_players, "both"),
       lead_primary_action = lead(primary_action),
+      lead_action_team = lead(action_team),
       lag_action_type = lag(action_type, default = NA),
       lead_action_type = lead(action_type, default = NA),
       set = cumsum(action_type == "Set Start"),
@@ -233,6 +234,21 @@ ncaa_vb_pbp <- function(game_id) {
         grepl("Timeout", action_type) ~ NA_integer_,
         TRUE ~ rally_number
       )
+    ) %>%
+    mutate(
+      # we need to filter out duplicate plays that have different action_team values. This typically happens on some types of errors where the table row that holds the entire rally is in the scoring team's column BUT the error actually should be assessed to their opponent.
+      lead_error_type = lead(error_type),
+      duplicate_situation = (lead_primary_action == primary_action) & (lead_action_team != action_team) & lead_error_type == error_type & (error_type %in% c("Ball Handling", "Set") & !scoring_play & is.na(other_actions)),
+      # we also need to update the second dupe's action_team to properly account for the error. this can be done safely here because we're not counting anything here, the scoring team is already properly set, and nothing below is dependent on the action_team value
+      lag_duplicate_situation = lag(duplicate_situation),
+      lag_action_team = lag(action_team),
+      action_team = case_when(
+        lag_duplicate_situation ~ lag_action_team,
+        TRUE ~ action_team
+      )
+    ) %>%
+    filter(
+      !duplicate_situation
     ) %>%
     group_by(set) %>%
     mutate(
@@ -329,7 +345,9 @@ ncaa_vb_pbp <- function(game_id) {
         rally_end,
         rally_total_plays,
         rally_end_action_type,
-        rally_starting_team
+        rally_starting_team,
+        # duplicate_situation,
+        # lag_duplicate_situation
       )
   } else {
     plays <- plays %>%
@@ -354,6 +372,8 @@ ncaa_vb_pbp <- function(game_id) {
         error_type,
         lag_action_type,
         lead_action_type,
+        # duplicate_situation,
+        # lag_duplicate_situation
       )
   }
 
