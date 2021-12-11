@@ -175,7 +175,7 @@ ncaa_vb_pbp <- function(game_id) {
         grepl("reception", tolower(primary_action)) ~ "Reception",
         grepl("block", tolower(primary_action)) ~ "Block",
         grepl("serve", tolower(primary_action)) ~ "Serve",
-        grepl("set", tolower(primary_action)) ~ "Set",
+        grepl("set by", tolower(primary_action)) ~ "Set",
         grepl("attack", tolower(primary_action)) ~ "Attack",
         grepl("subs:", tolower(primary_action)) ~ "Sub",
         grepl("sub in", tolower(primary_action)) ~ "Sub In",
