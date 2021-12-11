@@ -26,41 +26,30 @@ library(ggplot2)
 library(ggthemes)
 library(glue)
 
-# https://stackoverflow.com/a/53290748
-Mode <- function(x) {
-    if ( length(x) <= 2 ) return(x[1])
-    if ( anyNA(x) ) x = x[!is.na(x)]
-    ux <- unique(x)
-    ux[which.max(tabulate(match(x, ux)))]
-}
-
-ncaa_vb_adv_box_score <- function(game_id, away = "Away", home = "Home") {
-    # game_id = 5168298
+ncaa_vb_adv_box_score <- function(game_id) {
     pbp <- ncaa_vb_pbp(game_id)
 
-    custom_box <- pbp %>%
+    team_hit_box <- pbp %>%
+        filter(
+            action_type == "Kill" | action_type == "Dig" | error
+        ) %>%
+        group_by(action_team) %>%
+        summarize(
+            kills = sum(action_type == "Kill", na.rm = TRUE),
+            errors = sum(!is.na(error_type), na.rm = TRUE),
+            attempts = n(),
+            hit_pct = (kills - errors) / attempts
+        ) %>%
+        rename(team = action_team)
+
+
+    team_error_box <- pbp %>%
         mutate(
             lag_home_score = lag(home_score),
             lag_away_score = lag(away_score),
             lead_home_score = lead(home_score),
             lead_away_score = lead(away_score),
-            action_team_scored = case_when(
-                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == "home") & (lead_home_score > home_score) ~ TRUE,
-                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == "away") & (lead_home_score > home_score) ~ FALSE,
-                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == "away") & (lead_away_score > away_score) ~ TRUE,
-                (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == "home") & (lead_away_score > away_score) ~ FALSE,
-                (action_team == "home") & (lag_home_score < home_score) ~ TRUE,
-                (action_team == "away") & (lag_home_score < home_score) ~ FALSE,
-                (action_team == "away") & (lag_away_score < away_score) ~ TRUE,
-                (action_team == "home") & (lag_away_score < away_score) ~ FALSE,
-                TRUE ~ NA,
-            ),
-            scoring_team = case_when(
-                action_team_scored ~ action_team,
-                !action_team_scored & (action_team == "home") ~ "away",
-                !action_team_scored & (action_team == "away") ~ "home",
-                TRUE ~ NA_character_
-            ),
+            action_team_scored = (action_team == scoring_team),
             block_conversion = case_when(
                 (action_type == "Block") & action_team_scored ~ TRUE,
                 (action_type == "Block") & !action_team_scored ~ FALSE,
@@ -68,48 +57,58 @@ ncaa_vb_adv_box_score <- function(game_id, away = "Away", home = "Home") {
                 TRUE ~ NA
             ),
             forfeit_point = case_when(
-                (action_type == "Error") & (scoring_team != action_team) ~ TRUE,
+                (action_type == "Error") & (!action_team_scored) ~ TRUE,
                 TRUE ~ NA
             ),
             attempted_serve = (error_type == "Service") | (action_type == "Serve"),
-            successful_serve = (action_type == "Serve")
-        )
+            successful_serve = (action_type == "Serve"),
+        ) %>%
+        group_by(action_team) %>%
+        summarise(
+            hurtful_error_pct = sum(forfeit_point, na.rm = TRUE) / length(unique(rally_number)),
+            serve_pct = sum(successful_serve, na.rm = TRUE) / sum(attempted_serve, na.rm = TRUE),
+            forfeited_points = sum(forfeit_point, na.rm = TRUE),
+            block_win_pct = mean(block_conversion, na.rm = TRUE),
+        ) %>%
+        rename(team = action_team)
 
-    base_box <- custom_box %>%
+    team_service_box <- pbp %>%
         filter(grepl("Sub", action_type) == FALSE) %>%
         filter(grepl("Match", action_type) == FALSE) %>%
         filter(grepl("Set Start", action_type) == FALSE) %>%
         filter(grepl("Set End", action_type) == FALSE) %>%
         filter(nchar(action_team) > 0 & !is.na(action_team)) %>%
         mutate(
+            action_team_scored = (action_team == scoring_team),
             lead_rally_starting_team = lead(rally_starting_team)
         ) %>%
         group_by(rally_number) %>%
+        filter(
+            rally_play_number == last(rally_play_number)
+        ) %>%
+        ungroup() %>%
         mutate(
             ends_in_sideout = (action_team_scored) & (scoring_team != rally_starting_team),
             service_point = (action_team_scored) & (scoring_team == rally_starting_team)
         ) %>%
-        ungroup()
-
-    final_box = base_box %>%
         group_by(rally_starting_team) %>%
         summarize(
-            # hit_pct = # hit_pct is something we should have but it is actually pretty hard to do?
-            serve_pct = sum(successful_serve, na.rm = TRUE) / sum(attempted_serve, na.rm = TRUE),
             service_point_pct = sum(service_point, na.rm = TRUE) / length(unique(rally_number)),
             sideout_pct = sum(ends_in_sideout, na.rm = TRUE) / length(unique(rally_number)),
-            hurtful_error_pct = sum(forfeit_point, na.rm = TRUE) / length(unique(rally_number)),
-            block_win_pct = mean(block_conversion, na.rm = TRUE),
-            forfeited_points = sum(forfeit_point, na.rm = TRUE), # sometimes scoring errors are in the opponent's side of the table
-            points = sum(action_team_scored, na.rm = TRUE)
         ) %>%
-        mutate(
-            rally_starting_team = case_when(
-                rally_starting_team == "home" ~ home,
-                rally_starting_team == "away" ~ away,
-                TRUE ~ NA_character_
-            )
+        rename(team = rally_starting_team)
+
+    team_score_box = pbp %>%
+        group_by(scoring_team) %>%
+        summarize(
+            points = sum(scoring_play, na.rm = TRUE)
         ) %>%
-        filter(!is.na(rally_starting_team))
+        rename(team = scoring_team)
+
+    final_box = left_join(team_hit_box,  team_error_box, by = c("team"))
+    final_box = left_join(final_box,  team_service_box, by = c("team"))
+    final_box = left_join(final_box,  team_score_box, by = c("team"))
+    final_box <- final_box %>%
+        filter(!is.na(team))
     return(final_box)
 }
