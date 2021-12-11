@@ -32,8 +32,8 @@ ncaa_vb_pbp <- function(game_id) {
 
   play_tables <- base %>% html_nodes(".mytbl + .mytable") %>% html_table(fill=TRUE)
 
-  away_team = "away"
-  home_team = "home"
+  away_team_name = "away"
+  home_team_name = "home"
   base_plays <- bind_rows(play_tables)
   html_columns = 3
   if (ncol(base_plays) == 4) {
@@ -42,8 +42,8 @@ ncaa_vb_pbp <- function(game_id) {
     colnames(base_plays) <- c("score","action")
     base_score = base_plays$score[1]
     split_result = str_split_fixed(base_score, "\\s*-\\s*", 2)
-    away_team = split_result[1]
-    home_team = split_result[2]
+    away_team_name = split_result[1]
+    home_team_name = split_result[2]
 
     base_plays <- rbind(c("0-0","Set started"), base_plays)
     base_plays <- rbind(c("0-0","Match started"), base_plays)
@@ -62,6 +62,8 @@ ncaa_vb_pbp <- function(game_id) {
           grepl("End of \\d\\w+ Set", score) ~ lag(score),
           TRUE ~ score
         ),
+        home_team = home_team_name,
+        away_team = away_team_name,
         mentioned_team = case_when(
           grepl(home_team, action) ~ home_team,
           grepl(away_team, action) ~ away_team,
@@ -84,12 +86,14 @@ ncaa_vb_pbp <- function(game_id) {
     html_columns = 3
     colnames(base_plays) <- c("away_action","score","home_action")
     # get away/home team name from first row
-    away_team = base_plays$away_action[1]
-    home_team = base_plays$home_action[1]
+    away_team_name = base_plays$away_action[1]
+    home_team_name = base_plays$home_action[1]
 
     # strip out set headers
     base_plays <- base_plays %>%
       mutate(
+        home_team = home_team_name,
+        away_team = away_team_name,
         action = case_when(
           (nchar(home_action) > 0 & nchar(away_action) == 0) ~ home_action,
           (nchar(home_action) == 0 & nchar(away_action) > 0) ~ away_action,
@@ -300,6 +304,8 @@ ncaa_vb_pbp <- function(game_id) {
       ) %>%
       select(
         game_id,
+        away_team,
+        home_team,
         match_action_number,
         set,
         set_play_number,
@@ -329,6 +335,8 @@ ncaa_vb_pbp <- function(game_id) {
     plays <- plays %>%
       select(
         game_id,
+        away_team,
+        home_team,
         match_action_number,
         set,
         set_play_number,
