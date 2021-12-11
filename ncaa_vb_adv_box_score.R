@@ -42,7 +42,6 @@ ncaa_vb_adv_box_score <- function(game_id) {
         ) %>%
         rename(team = action_team)
 
-
     team_error_box <- pbp %>%
         mutate(
             lag_home_score = lag(home_score),
@@ -72,7 +71,7 @@ ncaa_vb_adv_box_score <- function(game_id) {
         ) %>%
         rename(team = action_team)
 
-    team_service_box <- pbp %>%
+    team_rally_box <- pbp %>%
         filter(grepl("Sub", action_type) == FALSE) %>%
         filter(grepl("Match", action_type) == FALSE) %>%
         filter(grepl("Set Start", action_type) == FALSE) %>%
@@ -80,23 +79,22 @@ ncaa_vb_adv_box_score <- function(game_id) {
         filter(nchar(action_team) > 0 & !is.na(action_team)) %>%
         mutate(
             action_team_scored = (action_team == scoring_team),
-            lead_rally_starting_team = lead(rally_starting_team)
+            lead_rally_starting_team = lead(rally_starting_team),
+            ends_in_sideout = (action_team_scored) & (scoring_team != rally_starting_team),
+            service_point = (action_team_scored) & (scoring_team == rally_starting_team)
         ) %>%
         group_by(rally_number) %>%
         filter(
             rally_play_number == last(rally_play_number)
         ) %>%
         ungroup() %>%
-        mutate(
-            ends_in_sideout = (action_team_scored) & (scoring_team != rally_starting_team),
-            service_point = (action_team_scored) & (scoring_team == rally_starting_team)
-        ) %>%
-        group_by(rally_starting_team) %>%
+        group_by(scoring_team) %>%
         summarize(
-            service_point_pct = sum(service_point, na.rm = TRUE) / length(unique(rally_number)),
-            sideout_pct = sum(ends_in_sideout, na.rm = TRUE) / length(unique(rally_number)),
+            avg_ttk = mean(rally_total_plays, na.rm = TRUE),
+            service_point_pct = mean(service_point, na.rm = TRUE),
+            sideout_pct = mean(ends_in_sideout, na.rm = TRUE)
         ) %>%
-        rename(team = rally_starting_team)
+        rename(team = scoring_team)
 
     team_score_box = pbp %>%
         group_by(scoring_team) %>%
@@ -105,9 +103,9 @@ ncaa_vb_adv_box_score <- function(game_id) {
         ) %>%
         rename(team = scoring_team)
 
-    final_box = left_join(team_hit_box,  team_error_box, by = c("team"))
-    final_box = left_join(final_box,  team_service_box, by = c("team"))
-    final_box = left_join(final_box,  team_score_box, by = c("team"))
+    final_box = left_join(team_hit_box, team_rally_box, by = c("team"))
+    final_box = left_join(final_box, team_error_box, by = c("team"))
+    final_box = left_join(final_box, team_score_box, by = c("team"))
     final_box <- final_box %>%
         filter(!is.na(team))
     return(final_box)
