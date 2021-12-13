@@ -1,3 +1,4 @@
+
 #' ncaa_vb_player_box_score()
 #' Scrape player box score during a volleyball game from ncaa.com data
 #'
@@ -12,32 +13,44 @@
 #' @param game_id the ID for the game's box score data
 #' @returns a data frame of player box score data for the specified game
 ncaa_vb_player_box_score <- function(game_id) {
-  base_url <- "https://data.ncaa.com/casablanca/game/"
+  base_url <- "https://stats.ncaa.org/contests"
 
-  full_url <- paste(base_url, game_id, "boxscore.json", sep="/")
+  full_url <- paste(base_url, game_id, "box_score", sep="/")
 
-  # Check for internet
-  #check_internet()
+  base <- rvest::read_html(full_url)
 
-  # Create the GET request and set response as res
-  res <- httr::GET(full_url)
+  all_tables <- base %>%
+    rvest::html_elements(".mytable") %>%
+    rvest::html_table()
 
-  # Check the result
-  #check_status(res)
+  team_one <- all_tables[[3]]
+  team_two <- all_tables[[4]]
 
-  bs.json <- jsonlite::fromJSON(full_url, flatten = TRUE)
+  col_names <- team_one[2,]
 
-  bs.df <- base::as.data.frame(bs.json$teams)
-  bs.meta <- base::as.data.frame(bs.json$meta$teams)
+  colnames(team_one) <- col_names
+  colnames(team_two) <- col_names
 
-  player.data <- bs.df %>%
-    purrr::map_if(is.data.frame, list) %>%
-    dplyr::as_tibble() %>%
-    dplyr::select(teamId, playerStats) %>%
-    tidyr::unnest(.data$playerStats, names_repair = "unique") %>%
-    base::unique(.)
+  team_one_final <- team_one %>%
+    dplyr::mutate(Team = as.character(team_one[1,1])) %>%
+    dplyr::filter(row_number() > 2 & row_number() <= nrow(team_one)-3)
 
-  bs.final <- base::merge(player.data, bs.meta, by.x = "teamId", by.y = "id")
+  team_two_final <- team_two %>%
+    dplyr::mutate(Team = team_two[1,1]) %>%
+    dplyr::filter(row_number() > 2 & row_number() <= nrow(team_two)-3)
 
-  return(bs.final)
+  full_box_score <- rbind(team_one_final, team_two_final)
+
+  #Possible columns in last 10 years of box score
+  cols_to_num <- c("S", "Kills", "Errors", "Svc Err", "Total Attacks", "Hit Pct", "Assists",
+                   "Aces", "SErr", "Digs", "RErr", "Block Solos", "Block Assists", "BErr", "TB",
+                   "PTS", "BHE", "Pct")
+
+  #Get the columns found available for this box score
+  found_cols <- colnames(full_box_score)[colnames(full_box_score) %in% cols_to_num]
+
+  full_box_score <- full_box_score %>%
+    dplyr::mutate_at(found_cols, as.numeric)
+
+  return(full_box_score)
 }
