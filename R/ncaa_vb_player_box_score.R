@@ -1,8 +1,7 @@
-
-#' ncaa_vb_player_box_score()
-#' Scrape player box score during a volleyball game from ncaa.com data
+#' @title ncaa_vb_player_box_score
+#' @description Scrape player box score during a volleyball game from ncaa.com data
 #'
-#' How to get a game ID:
+#' @details How to get a game ID:
 #' 1. find the game you want to view data for via ncaa.com's scoreboard
 #' 2. open up its box score page
 #' 3. Copy the string of numbers at the end of the URL from your browser's address bar.
@@ -30,14 +29,14 @@ ncaa_vb_player_box_score <- function(game_id) {
 
   colnames(team_one) <- col_names
   colnames(team_two) <- col_names
-
+a
   team_one_final <- team_one %>%
     dplyr::mutate(Team = as.character(team_one[1,1])) %>%
-    dplyr::filter(row_number() > 2 & row_number() <= nrow(team_one)-3)
+    dplyr::filter(dplyr::row_number() > 2 & dplyr::row_number() <= nrow(team_one)-3)
 
   team_two_final <- team_two %>%
     dplyr::mutate(Team = team_two[1,1]) %>%
-    dplyr::filter(row_number() > 2 & row_number() <= nrow(team_two)-3)
+    dplyr::filter(dplyr::row_number() > 2 & dplyr::row_number() <= nrow(team_two)-3)
 
   full_box_score <- rbind(team_one_final, team_two_final)
 
@@ -50,7 +49,8 @@ ncaa_vb_player_box_score <- function(game_id) {
   found_cols <- colnames(full_box_score)[colnames(full_box_score) %in% cols_to_num]
 
   full_box_score <- full_box_score %>%
-    dplyr::mutate_at(found_cols, as.numeric)
+    dplyr::mutate_at(found_cols, as.numeric) %>%
+    janitor::clean_names()
 
   return(full_box_score)
 }

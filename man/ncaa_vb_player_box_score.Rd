@@ -2,8 +2,7 @@
 % Please edit documentation in R/ncaa_vb_player_box_score.R
 \name{ncaa_vb_player_box_score}
 \alias{ncaa_vb_player_box_score}
-\title{ncaa_vb_player_box_score()
-Scrape player box score during a volleyball game from ncaa.com data}
+\title{ncaa_vb_player_box_score}
 \usage{
 ncaa_vb_player_box_score(game_id)
 }
@@ -14,6 +13,9 @@ ncaa_vb_player_box_score(game_id)
 a data frame of player box score data for the specified game
 }
 \description{
+Scrape player box score during a volleyball game from ncaa.com data
+}
+\details{
 How to get a game ID:
 \enumerate{
 \item find the game you want to view data for via ncaa.com's scoreboard

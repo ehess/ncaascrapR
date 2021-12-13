@@ -1,7 +1,7 @@
-#' ncaa_vb_pbp()
-#' Scrape about plays during a volleyball game from the NCAA website.
+#' @title ncaa_vb_pbp
+#' @description Scrape about plays during a volleyball game from the NCAA website.
 #'
-#' How to get a game ID:
+#' @details How to get a game ID:
 #' 1. find the game you want to view data for via stats.ncaa.org's scoreboard
 #' 2. open up its box score page
 #' 3. Click the play-by-play tab
@@ -10,18 +10,11 @@
 #' Note: there are at least two HTML table types available from the NCAA website,
 #' and the code below handles each differently (see if statements checking for `html_columns`).
 #'
-#' Examples:
-#' - HTML table type 1 (three columns): Ohio State vs Georgia Tech, play-by-play ID: 5174968
-#' - HTML table type 2 (four columns): Miami vs Florida, play-by-play ID: 5172096
+#'   - HTML table type 1 (three columns): Ohio State vs Georgia Tech, play-by-play ID: 5174968
+#'   - HTML table type 2 (four columns): Miami vs Florida, play-by-play ID: 5172096
 #'
 #' @param game_id the ID for the game's play_by_play data from the box score page
 #' @returns a data frame of play_by_play data for the specified game
-
-
-library(rvest)
-library(tidyverse)
-library(stringr)
-library(dplyr)
 
 ncaa_vb_pbp <- function(game_id) {
   base_url <- "https://stats.ncaa.org/game/play_by_play"

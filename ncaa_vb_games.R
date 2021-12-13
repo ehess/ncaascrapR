@@ -31,10 +31,10 @@ ncaa_vb_games <- function(team_id) {
     rvest::html_attr("href")
 
   schedule <- sched.played %>%
-    dplyr::mutate(Home = !grepl('@', Opponent)) %>%
-    tidyr::separate(opponent_slug, c("Teams", "Team_Id"), sep = "/teams/") %>%
-    tidyr::separate(slug, c("Empty", "Contests", "Game_Id", "box_score"), sep = "/") %>%
-    tidyr::separate(Result, c("Result", "Team_score", "Opponent_score")) %>%
+    dplyr::mutate(.data$Home = !grepl('@', .data$Opponent)) %>%
+    tidyr::separate(.data$opponent_slug, c("Teams", "Team_Id"), sep = "/teams/") %>%
+    tidyr::separate(.data$slug, c("Empty", "Contests", "Game_Id", "box_score"), sep = "/") %>%
+    tidyr::separate(.data$Result, c("Result", "Team_score", "Opponent_score")) %>%
     dplyr::select(Date, Opponent, Result, Team_score, Opponent_score, Attendance, Team_Id, Game_Id, Home) %>%
     janitor::clean_names()
 

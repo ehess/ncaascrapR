@@ -10,10 +10,10 @@ ncaa_vb_pbp(game_id)
 \item{game_id}{the ID for the game's play_by_play data from the box score page}
 }
 \value{
-a data frame of play-by-play data for the specified game
+a data frame of play_by_play data for the specified game
 }
 \description{
-Scrapes plays during a volleyball game from the NCAA website.
+Scrape about plays during a volleyball game from the NCAA website.
 }
 \details{
 How to get a game ID:
@@ -22,5 +22,12 @@ How to get a game ID:
 \item open up its box score page
 \item Click the play-by-play tab
 \item Copy the string of numbers at the end of the URL from your browser's address bar.
+}
+
+Note: there are at least two HTML table types available from the NCAA website,
+and the code below handles each differently (see if statements checking for \code{html_columns}).
+\itemize{
+\item HTML table type 1 (three columns): Ohio State vs Georgia Tech, play-by-play ID: 5174968
+\item HTML table type 2 (four columns): Miami vs Florida, play-by-play ID: 5172096
 }
 }
