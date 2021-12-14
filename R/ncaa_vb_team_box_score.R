@@ -12,31 +12,26 @@
 #' @param game_id the ID for the game's box score data
 #' @returns a data frame of team box score data for the specified game
 ncaa_vb_team_box_score <- function(game_id) {
-  base_url <- "https://data.ncaa.com/casablanca/game/"
+  base_url <- "https://stats.ncaa.org/contests"
 
-  full_url <- paste(base_url, game_id, "boxscore.json", sep="/")
+  full_url <- paste(base_url, game_id, "box_score", sep="/")
 
-  # Check for internet
-  #check_internet()
+  base <- rvest::read_html(full_url)
 
-  # Create the GET request and set response as res
-  res <- httr::GET(full_url)
+  all_tables <- base %>%
+    rvest::html_elements(".mytable") %>%
+    rvest::html_table()
 
-  # Check the result
-  #check_status(res)
+  team_box_score <- all_tables[[1]]
 
-  bs.json <- jsonlite::fromJSON(full_url, flatten = TRUE)
+  col_names <- c("Team", paste0("Set ", seq(1, ncol(team_box_score)-2, by = 1)), "Sets Won")
 
-  bs.df <- as.data.frame(bs.json$teams)
-  bs.meta <- as.data.frame(bs.json$meta$teams)
+  colnames(team_box_score) <- col_names
 
-  bs.team <- bs.df %>%
-    purrr::map_if(is.data.frame, list) %>%
-    dplyr::as_tibble() %>%
-    tidyr::unnest(.data$sets, names_repair = "unique") %>%
-    dplyr::select(teamId, setNumber, kills, attackErrors, hittingPercentage, attackAttempts)
+  team_box_score <- team_box_score %>%
+    dplyr::filter(.data$Team != "") %>%
+    as.data.frame() %>%
+    janitor::clean_names()
 
-  bs.final <- base::merge(bs.team, bs.meta, by.x = "teamId", by.y = "id")
-
-  return(bs.final)
+  return(team_box_score)
 }
