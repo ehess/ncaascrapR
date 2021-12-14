@@ -19,77 +19,80 @@
 #' @param away Away Team
 #' @param home Home Team
 #' @returns a data frame of play_by_play data for the specified game
-#' @importFrom dplyr lag lead case_when filter mutate group_by ungroup summarize
+#' @importFrom dplyr lag lead case_when filter mutate group_by ungroup summarize left_join first last n
 #'
 
 ncaa_vb_adv_box_score <- function(game_id, away = "Away", home = "Home") {
   # game_id = 5168298
   pbp <- ncaa_vb_pbp(game_id)
 
-  custom_box <- pbp %>%
+  team_hit_box <- pbp %>%
+    dplyr::filter(action_type == "Kill" | action_type == "Dig" | error) %>%
+    dplyr::group_by(action_team) %>%
+    dplyr::summarize(
+      kills = sum(action_type == "Kill", na.rm = TRUE),
+      errors = sum(!is.na(error_type), na.rm = TRUE),
+      attempts = dplyr::n(),
+      hit_pct = (kills - errors) / attempts) %>%
+    dplyr::rename(team = action_team)
+
+  team_error_box <- pbp %>%
     dplyr::mutate(
       lag_home_score = dplyr::lag(home_score),
       lag_away_score = dplyr::lag(away_score),
       lead_home_score = dplyr::lead(home_score),
       lead_away_score = dplyr::lead(away_score),
-      action_team_scored = dplyr::case_when(
-        (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == "home") & (lead_home_score > home_score) ~ TRUE,
-        (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == "away") & (lead_home_score > home_score) ~ FALSE,
-        (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == "away") & (lead_away_score > away_score) ~ TRUE,
-        (action_type == "Error" & error_type %in% c("Ball Handling", "Set", "Block")) & (action_team == "home") & (lead_away_score > away_score) ~ FALSE,
-        (action_team == "home") & (lag_home_score < home_score) ~ TRUE,
-        (action_team == "away") & (lag_home_score < home_score) ~ FALSE,
-        (action_team == "away") & (lag_away_score < away_score) ~ TRUE,
-        (action_team == "home") & (lag_away_score < away_score) ~ FALSE,
-        TRUE ~ NA),
-      scoring_team = dplyr::case_when(
-        action_team_scored ~ action_team,
-        !action_team_scored & (action_team == "home") ~ "away",
-        !action_team_scored & (action_team == "away") ~ "home",
-        TRUE ~ NA_character_),
+      action_team_scored = (action_team == scoring_team),
       block_conversion = dplyr::case_when(
         (action_type == "Block") & action_team_scored ~ TRUE,
         (action_type == "Block") & !action_team_scored ~ FALSE,
         (action_type == "Error") & (error_type == "Block") ~ FALSE,
-        TRUE ~ NA),
+        TRUE ~ NA
+      ),
       forfeit_point = dplyr::case_when(
-        (action_type == "Error") & (scoring_team != action_team) ~ TRUE,
-        TRUE ~ NA),
+        (action_type == "Error") & (!action_team_scored) ~ TRUE,
+        TRUE ~ NA
+      ),
       attempted_serve = (error_type == "Service") | (action_type == "Serve"),
-      successful_serve = (action_type == "Serve")
-    )
+      successful_serve = (action_type == "Serve")) %>%
+    dplyr::group_by(action_team) %>%
+    dplyr::summarise(
+      hurtful_error_pct = sum(forfeit_point, na.rm = TRUE) / length(unique(rally_number)),
+      serve_pct = sum(successful_serve, na.rm = TRUE) / sum(attempted_serve, na.rm = TRUE),
+      forfeited_points = sum(forfeit_point, na.rm = TRUE),
+      block_win_pct = mean(block_conversion, na.rm = TRUE)) %>%
+    dplyr::rename(team = action_team)
 
-  base_box <- custom_box %>%
-    dplyr::filter(
-      grepl("Sub", action_type) == FALSE,
-                  grepl("Match", action_type) == FALSE,
-                  grepl("Set Start", action_type) == FALSE,
-                  grepl("Set End", action_type) == FALSE,
-                  (nchar(action_team) > 0 & !is.na(action_team))) %>%
+  team_rally_box <- pbp %>%
+    dplyr::filter(grepl("Sub", action_type) == FALSE) %>%
+    dplyr::filter(grepl("Match", action_type) == FALSE) %>%
+    dplyr::filter(grepl("Set Start", action_type) == FALSE) %>%
+    dplyr::filter(grepl("Set End", action_type) == FALSE) %>%
+    dplyr::filter(nchar(action_team) > 0 & !is.na(action_team)) %>%
     dplyr::mutate(
-      lead_rally_starting_team = dplyr::lead(rally_starting_team)) %>%
-    dplyr::group_by(rally_number) %>%
-    dplyr::mutate(
+      action_team_scored = (action_team == scoring_team),
+      lead_rally_starting_team = lead(rally_starting_team),
       ends_in_sideout = (action_team_scored) & (scoring_team != rally_starting_team),
       service_point = (action_team_scored) & (scoring_team == rally_starting_team)) %>%
-    dplyr::ungroup()
-
-  final_box = base_box %>%
-    dplyr::group_by(rally_starting_team) %>%
+    dplyr::group_by(rally_number) %>%
+    dplyr::filter(rally_play_number == last(rally_play_number)) %>%
+    dplyr::ungroup() %>%
+    dplyr::group_by(scoring_team) %>%
     dplyr::summarize(
-      # hit_pct = # hit_pct is something we should have but it is actually pretty hard to do?
-      serve_pct = sum(successful_serve, na.rm = TRUE) / sum(attempted_serve, na.rm = TRUE),
-      service_point_pct = sum(service_point, na.rm = TRUE) / length(unique(rally_number)),
-      sideout_pct = sum(ends_in_sideout, na.rm = TRUE) / length(unique(rally_number)),
-      hurtful_error_pct = sum(forfeit_point, na.rm = TRUE) / length(unique(rally_number)),
-      block_win_pct = mean(block_conversion, na.rm = TRUE),
-      forfeited_points = sum(forfeit_point, na.rm = TRUE), # sometimes scoring errors are in the opponent's side of the table
-      points = sum(action_team_scored, na.rm = TRUE)) %>%
-    dplyr::mutate(
-      rally_starting_team = dplyr::case_when(
-        rally_starting_team == "home" ~ home,
-        rally_starting_team == "away" ~ away,
-        TRUE ~ NA_character_)) %>%
-    dplyr::filter(!is.na(rally_starting_team))
+      avg_ttk = mean(rally_total_plays, na.rm = TRUE),
+      service_point_pct = mean(service_point, na.rm = TRUE),
+      sideout_pct = mean(ends_in_sideout, na.rm = TRUE)) %>%
+    dplyr::rename(team = scoring_team)
+
+  team_score_box = pbp %>%
+    dplyr::group_by(scoring_team) %>%
+    dplyr::summarize(points = sum(scoring_play, na.rm = TRUE)) %>%
+    dplyr::rename(team = scoring_team)
+
+  final_box = dplyr::left_join(team_hit_box, team_rally_box, by = c("team"))
+  final_box = dplyr::left_join(final_box, team_error_box, by = c("team"))
+  final_box = dplyr::left_join(final_box, team_score_box, by = c("team"))
+  final_box <- final_box %>%
+    dplyr::filter(!is.na(team))
   return(final_box)
 }

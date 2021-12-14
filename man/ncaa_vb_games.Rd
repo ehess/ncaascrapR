@@ -4,14 +4,10 @@
 \alias{ncaa_vb_games}
 \title{ncaa_vb_games}
 \usage{
-ncaa_vb_games(year, month, day)
+ncaa_vb_games(team_id)
 }
 \arguments{
-\item{year}{Year, 4 digit format (YYYY)}
-
-\item{month}{Month, 2 digit format (MM)}
-
-\item{day}{Day, 2 digit format (DD)}
+\item{team_id}{the id for the team for that season}
 }
 \value{
 a data frame of games from the NCAA website

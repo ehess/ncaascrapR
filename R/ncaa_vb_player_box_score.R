@@ -29,7 +29,7 @@ ncaa_vb_player_box_score <- function(game_id) {
 
   colnames(team_one) <- col_names
   colnames(team_two) <- col_names
-a
+
   team_one_final <- team_one %>%
     dplyr::mutate(Team = as.character(team_one[1,1])) %>%
     dplyr::filter(dplyr::row_number() > 2 & dplyr::row_number() <= nrow(team_one)-3)
