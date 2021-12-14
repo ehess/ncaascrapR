@@ -1,0 +1,62 @@
+Package: ncaascrapR
+Title: Functions to Access NCAA Sports Data
+Version: 0.0.0.9000
+Authors@R: 
+    c(person(given = "Akshay",
+             family = "Easwaran",
+             role = c("aut"),
+             email = "akeaswaran@me.com"),
+     person(given = "Eric",
+             family = "Hess",
+             role = c("aut", "cre"),
+             email = "eric.hess.13@gmail.com"),
+     person(given = "John",
+             family = "Edwards",
+             role = c("aut"),
+             email = "eric.hess.13@gmail.com"),
+     person(given = "Saiem",
+             family = "Gilani",
+             role = "ctb",
+             email = "saiem.gilani@gmail.com"))
+Description: A set of utilities for working with National Collegiate Athletic Association (NCAA) <https://www.ncaa.com> data. It is a scraping and
+    aggregating interface for the Data and Stats <https://stats.ncaa.org/> portals of the NCAA. 
+License: MIT + file LICENSE
+URL: https://ehess.github.io/ncaascrapR/,
+    https://github.com/ehess/ncaascrapR
+BugReports: https://github.com/ehess/ncaascrapR/issues
+Depends: 
+  R (>= 4.1.0)
+Imports: 
+    cli (>= 3.0.0),
+    data.table (>= 1.14.0),
+    dplyr,
+    glue,
+    janitor,
+    jsonlite,
+    magrittr,
+    progressr (>= 0.6.0),
+    purrr (>= 0.3.0),
+    rlang (>= 0.4.0),
+    rvest (>= 1.0.0),
+    stringr (>= 1.3.0),
+    tibble (>= 3.0),
+    tidyr (>= 1.0.0)
+Suggests: 
+    crayon (>= 1.3.4),
+    curl,
+    DBI,
+    ggplot2,
+    ggrepel,
+    ggthemes,
+    httr,
+    qs (>= 0.25.1),
+    rmarkdown,
+    RSQLite,
+    stats,
+    stringi,
+    testthat,
+    usethis (>= 1.6.0)
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.2
+Roxygen: list(markdown = TRUE)
