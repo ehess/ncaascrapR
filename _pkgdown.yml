@@ -1,0 +1,117 @@
+url: https://github.com/ehess/ncaascrapR/
+
+title: ncaascrapR
+description: "Functions to Access NCAA Sports Data."
+template:
+  params:
+    bootswatch: cosmo
+  opengraph:
+    image:
+      src: "https://github.com/ehess/ncaascrapR/blob/main/man/figures/ncaascrapR_card.png?raw=true"
+    twitter:
+      site: "@arbitanalytics"
+      card: summary_large_image
+toc:
+  depth: 3
+
+authors:
+  Akshay Easwaran:
+    href: https://twitter.com/akeaswaran
+  Eric Hess:
+    href: https://twitter.com/arbitanalytics
+  John B. Edwards:
+    href: https://twitter.com/John_B_Edwards
+  Saiem Gilani:
+    href: https://twitter.com/saiemgilani
+
+home:
+  title: Functions to Access NCAA Sports Data.
+  icon: fa-home
+  href: https://ehess.github.io/ncaascrapR/
+
+navbar:
+  structure:
+    left:  [home, intro, reference, articles, news, network, data, repo]
+    right: [twitter, github]
+  components:
+    twitter:
+      icon: "fab fa-twitter fa-lg"
+      href: https://twitter.com/arbitanalytics
+    news:
+      icon: "fas fa-newspaper"
+      text: " News"
+      href: news/index.html
+    data:
+      icon: "fas fa-database"
+      text: " Data"
+      menu:
+        - text: "Data Repository"
+          href: https://github.com/saiemgilani/ncaascrapR-data
+    reference:
+      icon: "fas fa-code"
+      text: "Funcs"
+      href: reference/index.html
+      menu:
+        - text: "Function Index"
+          href: reference/index.html
+    articles:
+      icon: "fas fa-book-reader"
+      text: "Articles"
+      menu:
+        - text: "ncaascrapR Introduction"
+          href: articles/introduction.html
+    network:
+      icon: "fas fa-project-diagram"
+      text: SDV
+      menu:
+      - text: SportsDataverse
+        href: https://sportsdataverse.org/
+      - text: --------------------------------
+      - text: R Packages
+      - text: cfbfastR
+        href: https://github.com/saiemgilani/cfbfastR
+      - text: hoopR
+        href: https://hoopR.sportsdataverse.org/
+      - text: wehoop
+        href: https://wehoop.sportsdataverse.org/
+      - text: recruitR
+        href: https://saiemgilani.github.io/recruitR/
+      - text: puntr
+        href: https://puntalytics.github.io/puntr
+      - text: gamezoneR
+        href: https://jacklich10.github.io/gamezoneR/
+      - text: cfbplotR
+        href: https://kazink36.github.io/cfbplotR/
+      - text: cfb4th
+        href: https://kazink36.github.io/cfb4th/
+      - text: worldfootballR
+        href: https://jaseziv.github.io/worldfootballR/
+      - text: baseballr
+        href: https://BillPetti.github.io/baseballr/
+      - text: hockeyR
+        href: https://hockeyr.netlify.app/
+      - text: fastRhockey
+        href: https://BenHowell71.github.io/fastRhockey/
+      - text: --------------------------------
+      - text: Python Packages
+      - text: sportsdataverse-py
+        href: https://py.sportsdataverse.org/
+      - text: --------------------------------
+      - text: Node.js Packages
+      - text: sportsdataverse.js
+        href: https://saiemgilani.github.io/sportsdataverse/
+      - text: nfl-nerd
+        href: https://github.com/nntrn/nfl-nerd/
+    github:
+      icon: "fab fa-github fa-lg"
+      href: https://github.com/ehess/ncaascrapR
+    repo:
+      url: https://github.com/ehess/ncaascrapR
+      home: https://github.com/ehess/ncaascrapR
+      source: https://github.com/ehess/ncaascrapR/blob/master/
+      issue: https://github.com/ehess/ncaascrapR/issues/
+      user: https://github.com/ehess
+reference:
+
+
+
