@@ -14,7 +14,7 @@ body {
 h1, h2, .h1, .h2{
   font-family: "Chivo";
   letter-spacing: 1px;
-  line-height: 2.2rem; /* increases, so wrapping headers don't overlap */ 
+  line-height: 2.2rem; /* increases, so wrapping headers don't overlap */
   color: #0f0f0f;
   font-weight: 500;
   font-size: 20px;
@@ -23,7 +23,7 @@ h1, h2, .h1, .h2{
 h3, h4, h5, h6, .h3, .h4{
   font-family: "Chivo";
   letter-spacing: 0.6px;
-  line-height: 1.8rem; /* increases, so wrapping headers don't overlap */ 
+  line-height: 1.8rem; /* increases, so wrapping headers don't overlap */
   color: #0f0f0f;
   font-weight: 500;
   font-size: 18px;
@@ -84,7 +84,7 @@ pre, code {
   from {
     text-shadow: 0 0 8px #F4FE85, 0 0 10px #F4FE85;
   }
-  
+
   to {
     text-shadow: 0 0 10px #F4FE85, 0 0 11px #F4FE85;
   }
@@ -95,7 +95,7 @@ pre, code {
      text-shadow: 0 0 10px #F4FE85, 0 0 11px #F4FE85;
     }
   }
-  
+
 .dropdown-header {
   font-family: "Chivo";
   letter-spacing: 0.1px;
@@ -108,6 +108,6 @@ pre, code {
 .navbar-default .navbar-link {
     font-family: "Bungee";
     font-size: 16px;
-    color: #F2EC84;
+    color: #F8F8F8;
     animation: glow 3s ease-in-out infinite alternate;
 }
