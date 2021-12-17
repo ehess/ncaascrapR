@@ -1,81 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>/404.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/404.html</loc>
   </url>
   <url>
-    <loc>/LICENSE-text.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/LICENSE-text.html</loc>
   </url>
   <url>
-    <loc>/LICENSE.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/LICENSE.html</loc>
   </url>
   <url>
-    <loc>/authors.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/authors.html</loc>
   </url>
   <url>
-    <loc>/index.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/index.html</loc>
   </url>
   <url>
-    <loc>/news/index.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/news/index.html</loc>
   </url>
   <url>
-    <loc>/reference/get_team_schedule.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/get_team_schedule.html</loc>
   </url>
   <url>
-    <loc>/reference/index.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/index.html</loc>
   </url>
   <url>
-    <loc>/reference/ncaa_bb_games.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_bb_games.html</loc>
   </url>
   <url>
-    <loc>/reference/ncaa_bb_player_box_score.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_bb_player_box_score.html</loc>
   </url>
   <url>
-    <loc>/reference/ncaa_bb_team_box_score.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_bb_team_box_score.html</loc>
   </url>
   <url>
-    <loc>/reference/ncaa_fb_box_score.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_fb_box_score.html</loc>
   </url>
   <url>
-    <loc>/reference/ncaa_fb_game_info.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_fb_game_info.html</loc>
   </url>
   <url>
-    <loc>/reference/ncaa_fb_games.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_fb_games.html</loc>
   </url>
   <url>
-    <loc>/reference/ncaa_fb_pbp.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_fb_pbp.html</loc>
   </url>
   <url>
-    <loc>/reference/ncaa_fb_scoring_summary.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_fb_scoring_summary.html</loc>
   </url>
   <url>
-    <loc>/reference/ncaa_fb_team_stats.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_fb_team_stats.html</loc>
   </url>
   <url>
-    <loc>/reference/ncaa_game_info.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_game_info.html</loc>
   </url>
   <url>
-    <loc>/reference/ncaa_vb_adv_box_score.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_vb_adv_box_score.html</loc>
   </url>
   <url>
-    <loc>/reference/ncaa_vb_game_info.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_vb_game_info.html</loc>
   </url>
   <url>
-    <loc>/reference/ncaa_vb_games.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_vb_games.html</loc>
   </url>
   <url>
-    <loc>/reference/ncaa_vb_pbp.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_vb_pbp.html</loc>
   </url>
   <url>
-    <loc>/reference/ncaa_vb_player_box_score.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_vb_player_box_score.html</loc>
   </url>
   <url>
-    <loc>/reference/ncaa_vb_roster.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_vb_roster.html</loc>
   </url>
   <url>
-    <loc>/reference/ncaa_vb_team_box_score.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_vb_team_box_score.html</loc>
   </url>
   <url>
-    <loc>/reference/ncaascrapR-package.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaascrapR-package.html</loc>
   </url>
 </urlset>
