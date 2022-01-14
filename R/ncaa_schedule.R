@@ -206,7 +206,7 @@ ncaa_schedule <- function(team_id) {
         stringi::stri_replace_all(Result, regex = '(\\(([0-9]* OT)\\))|(\\(([0-9]*OT)\\))', '')
       )
     ) |>
-    dplyr::left_join(game_id_table, by = c('Date', 'Opponent_Clean', 'Result')) |>
+    dplyr::inner_join(game_id_table, by = c('Date', 'Opponent_Clean', 'Result')) |>
     dplyr::mutate(event = dplyr::case_when(event == '' ~ NA_character_,
                                            T~ event)) |>
     dplyr::select(
