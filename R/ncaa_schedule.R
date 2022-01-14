@@ -207,6 +207,7 @@ ncaa_schedule <- function(team_id) {
       )
     ) |>
     dplyr::inner_join(game_id_table, by = c('Date', 'Opponent_Clean', 'Result')) |>
+    dplyr::distinct(game_id,.keep_all=T) |>
     dplyr::mutate(event = dplyr::case_when(event == '' ~ NA_character_,
                                            T~ event)) |>
     dplyr::select(
