@@ -37,47 +37,61 @@ ncaa_schedule <- function(team_id) {
       rvest::html_node('#stats_player_person_id') |>
       rvest::html_node('option') |>
       rvest::html_text()
-    game_id_table <- html_b |>
-      rvest::html_node('body') |>
-      rvest::html_node('div#contentarea') |>
-      rvest::html_node('div#game_breakdown_div') |>
-      rvest::html_node('table') |>
-      rvest::html_node('tr') |>
-      rvest::html_node('td') |>
-      rvest::html_table() |>
-      dplyr::select(X1, X2, X3) |>
-      dplyr::filter(X1 != '' & X3 != '-') |>
-      dplyr::slice(-c(1:2)) |>
-      dplyr::group_by(X1) |>
-      dplyr::mutate(
-        game_num = dplyr::row_number(),
-        X1 = dplyr::case_when(max(game_num) > 1 ~ paste0(X1, '(', game_num, ')'),
-                              T ~ X1)
-      ) |>
-      dplyr::ungroup() |>
-      dplyr::mutate(
-        game_id = html_b |>
-          rvest::html_node('body') |>
-          rvest::html_node('div#contentarea') |>
-          rvest::html_node('div#game_breakdown_div') |>
-          rvest::html_nodes('a') |>
-          rvest::html_attr('href') |>
-          (\(x) {
-            x[stringi::stri_detect(x, regex = '^/game/index/[0-9]*\\?org_id=[0-9]*$')]
-          })() |>
-          stringi::stri_replace_all(regex = '(/game/index/)|(\\?org_id=[0-9]*$)', ''),
-        X2 = stringi::stri_replace_all(X2, regex = '((?=(.*)) @ (.*)$)|(@ )', ''),
-        X3 = stringi::stri_replace_all(X3, regex = ' -', '-'),
-        X3 = stringi::stri_replace_all(X3, regex = '- ', '-'),
-        X3 = stringi::stri_replace_all(X3, regex = '(\\(([0-9]* OT)\\))|(\\(([0-9]*OT)\\))', ''),
-        X3 = trimws(X3)
-      ) |>
-      dplyr::select(
-        Date = X1,
-        Opponent_Clean = X2,
-        Result = X3,
-        game_id
-      )
+    game_id_table <- data.frame(
+      Date = html_b |>
+        rvest::html_node('body') |>
+        rvest::html_node('div#contentarea') |>
+        rvest::html_node('div#game_breakdown_div') |>
+        rvest::html_nodes(xpath='table/tr/td/table/tr/td[count(table/tr/td/table/tr/th[.="Result"]/preceding-sibling::th)+1]') |>
+        rvest::html_text(trim=T) |>
+        unlist() |>
+        (\(x) x[x!=''])() |>
+        (\(x) x[-c(1)])(),
+      Opponent_Clean = html_b |>
+        rvest::html_node('body') |>
+        rvest::html_node('div#contentarea') |>
+        rvest::html_node('div#game_breakdown_div') |>
+        rvest::html_nodes(xpath='table/tr/td/table/tr/td[count(table/tr/td/table/tr/th[.="Result"]/preceding-sibling::th)+2]') |>
+        lapply(\(x) {
+          if(length(rvest::html_attr(x,'class'))){
+            if(!is.na(rvest::html_attr(x,'class'))){
+              return(rvest::html_text(x,trim=T))
+            }
+          }}) |>
+        unlist() |>
+        stringi::stri_replace_all(regex = '((?=(.*)) @ (.*)$)|(@ )', ''),
+      Result = html_b |>
+        rvest::html_node('body') |>
+        rvest::html_node('div#contentarea') |>
+        rvest::html_node('div#game_breakdown_div') |>
+        rvest::html_nodes(xpath='table/tr/td/table/tr/td[count(table/tr/td/table/tr/th[.="Result"]/preceding-sibling::th)+3]') |>
+        rvest::html_text(trim=T) |>
+        unlist() |>
+        (\(x) x[x!=''])() |>
+        stringi::stri_replace_all(regex = ' -', '-') |>
+        stringi::stri_replace_all(regex = '- ', '-') |>
+        stringi::stri_replace_all(regex = '(\\(([0-9]* OT)\\))|(\\(([0-9]*OT)\\))', '') |>
+        trimws(),
+      game_id = html_b |>
+        rvest::html_node('body') |>
+        rvest::html_node('div#contentarea') |>
+        rvest::html_node('div#game_breakdown_div') |>
+        rvest::html_nodes(xpath='table/tr/td/table/tr/td[count(table/tr/td/table/tr/th[.="Result"]/preceding-sibling::th)+3]') |>
+        sapply(\(x) {
+          id <- rvest::html_nodes(x, 'a') |>
+            rvest::html_attr('href')
+          if(!length(id)){
+            id <- NA_character_
+          }
+          text <- x |>
+            rvest::html_text(trim=T)
+          if(nchar(text)){
+            return(id)
+          }
+        },simplify=T) |>
+        unlist() |>
+        stringi::stri_replace_all(regex = '(/game/index/)|(\\?org_id=[0-9]*$)', '')
+    )
   } else { # this is a hilariously hacky way to grab team short names
     team_name <- html_a |>
       rvest::html_nodes(xpath='/html/body/div[2]/a[2]') |>
@@ -117,6 +131,9 @@ ncaa_schedule <- function(team_id) {
                                     stringi::stri_replace_all(regex = '^#([0-9]*)', '') |>
                                     trimws())
   html_a |>
+    xml2::xml_find_all(".//br") |>
+    xml2::xml_add_sibling("p", "x_break")
+  html_a |>
     rvest::html_node('body') |>
     rvest::html_node('#contentarea') |>
     rvest::html_node('table') |>
@@ -136,8 +153,7 @@ ncaa_schedule <- function(team_id) {
         )
       )),
       T ~ NA_character_),
-      Opponent_Clean = Opponent |> stringi::stri_replace_all(regex = '^#([0-9]*)|(@ )|(@(.*)$)', '') |>
-        trimws()) |>
+      Opponent_Clean = trimws(gsub('@ |^\\#[0-9]* |^[0-9]* | x_break|^\\@#[0-9]* ','',stringi::stri_extract_all_regex(paste0(Opponent,' x_break'),'^.+?(?=x_break)')))) |>
     dplyr::left_join(opponent_id_table, by=c('Opponent_Clean')) |>
     dplyr::mutate(
       event = trimws(
@@ -156,6 +172,7 @@ ncaa_schedule <- function(team_id) {
         stringi::stri_detect(event, regex = '^@(.*)') ~ gsub('^@(.*)', '', event),
         T ~ event
       ),
+      event = gsub('x_break','',event),
       details = dplyr::case_when(
         stringi::stri_detect(Result, regex = '^(W|L|T) ([0-9]*)-([0-9]*)$') ~ NA_character_,
         stringi::stri_detect(Result, regex = '^(W|L|T) ([0-9]*)-([0-9]*)') ~ trimws(gsub(
@@ -206,8 +223,8 @@ ncaa_schedule <- function(team_id) {
         stringi::stri_replace_all(Result, regex = '(\\(([0-9]* OT)\\))|(\\(([0-9]*OT)\\))', '')
       )
     ) |>
-    dplyr::inner_join(game_id_table, by = c('Date', 'Opponent_Clean', 'Result')) |>
-    dplyr::distinct(game_id,.keep_all=T) |>
+    dplyr::left_join(game_id_table, by = c('Date', 'Opponent_Clean', 'Result')) |>
+    dplyr::distinct(game_id,Date,opponent_id, .keep_all=T) |>
     dplyr::mutate(event = dplyr::case_when(event == '' ~ NA_character_,
                                            T~ event)) |>
     dplyr::select(
@@ -221,7 +238,6 @@ ncaa_schedule <- function(team_id) {
       away_score,
       is_neutral,
       event,
-      details,
       attendance = Attendance
     )
 }
