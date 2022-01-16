@@ -2,7 +2,7 @@
 #' @description Scrapes and parses pbp data for ncaa basketball games
 #'
 #' @param game_id the game_id for the specified game from stats.ncaa.com
-#' @return a dataframe of cleaned, parsed play-by-play data for the specified 
+#' @return a dataframe of cleaned, parsed play-by-play data for the specified
 #' `game_id`
 ncaa_bb_pbp <- function(game_id) {
   html <- # grab html here to avoid repeatedly referencing it
@@ -11,13 +11,15 @@ ncaa_bb_pbp <- function(game_id) {
   box_html <- # grab box html for name joins later
     paste0('https://stats.ncaa.org/game/box_score/', game_id) |>
     rvest::read_html()
-  rosters <- box_html |> # generate a roster dataframe for both teams
+  rosters <-
+    box_html |> # generate a roster dataframe for both teams
     rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
     rvest::html_table() |>
     janitor::row_to_names(2) |>
     dplyr::filter(Player != 'Totals') |>
     dplyr::mutate(
-      player = gsub(',', '', sub("(^.*),\\s(.*$)", "\\2 \\1", Player)), # extract and parse player names
+      player = gsub(',', '', sub("(^.*),\\s(.*$)", "\\2 \\1", Player)),
+      # extract and parse player names
       player_id = box_html |> # grab NCAA player IDs
         rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
         rvest::html_nodes('a') |>
@@ -41,7 +43,8 @@ ncaa_bb_pbp <- function(game_id) {
       pos = Pos
     ) |>
     dplyr::select(player:pos) |> # select relevant cols
-    dplyr::bind_rows( # bind to other team's roster DF
+    dplyr::bind_rows(
+      # bind to other team's roster DF
       box_html |>
         rvest::html_node(xpath = '/html/body/div[2]/table[6]') |>
         rvest::html_table() |>
@@ -103,7 +106,8 @@ ncaa_bb_pbp <- function(game_id) {
                     fill = "right",
                     extra = "drop") |>
     dplyr::mutate(
-      pbp_version = ifelse( # we need to check for the PBP version, there are two different kinds, this affects things like regex
+      pbp_version = ifelse(
+        # we need to check for the PBP version, there are two different kinds, this affects things like regex
         html |>
           rvest::html_node(xpath = 'body/div[2]/table[6]/tr[2]/td[2]') |>
           rvest::html_text() |>
@@ -113,7 +117,8 @@ ncaa_bb_pbp <- function(game_id) {
       )
     ) |>
     dplyr::filter(grepl('([0-9]*)-([0-9]*)', X3)) |> # remove any filler rows indicating things like "jumpball start"
-    dplyr::mutate( # parse time of game
+    dplyr::mutate(
+      # parse time of game
       across(c(minute, second, centiseconds), as.numeric),
       centiseconds = dplyr::case_when(is.na(centiseconds) ~ 0,
                                       T ~ centiseconds),
@@ -130,7 +135,8 @@ ncaa_bb_pbp <- function(game_id) {
     dplyr::ungroup() |>
     dplyr::mutate(
       period = paste(period_first, period_second),
-      play_id = as.character(paste0(game_id, dplyr::row_number())), # unique identifier for each play
+      play_id = as.character(paste0(game_id, dplyr::row_number())),
+      # unique identifier for each play
       game_id = game_id,
       game_start_datetime = html |> # time of game
         rvest::html_node(xpath = '/html/body/div[2]/table[3]/tr[1]/td[2]') |>
@@ -350,7 +356,7 @@ ncaa_bb_pbp <- function(game_id) {
                                 desc),
       defensive_rebound = grepl('rebound defensive| Defensive Rebound',
                                 desc),
-      dead_ball_rebound = grepl('dead ball rebound| Deadball Rebound',
+      dead_ball_rebound = grepl('dead ball rebound| Deadball Rebound|deadball',
                                 desc),
       team_rebound = grepl(
         'rebound offensive team|rebound defensive team|TEAM Offensive Rebound|TEAM Defensive Rebound',
@@ -380,6 +386,7 @@ ncaa_bb_pbp <- function(game_id) {
                     desc),
       jump_ball = grepl('jumpball',
                         desc),
+      timeout = grepl(' timeout', desc),
       substitution = grepl('substitution| Enters Game| Leaves Game', desc),
       substitution_in = grepl('substitution in| Enters Game', desc),
       substitution_out = grepl('substitution out| Leaves Game', desc),
@@ -413,13 +420,14 @@ ncaa_bb_pbp <- function(game_id) {
       ),
       total = away_score + home_score,
       ordering = dplyr::case_when(
-        turnover ~ 1,
-        field_goal_attempt ~ 2,
-        assist ~ 3,
-        foul ~ 4,
-        substitution ~ 5,
-        free_throw ~ 6,
-        rebound ~ 7,
+        timeout ~ 1,
+        turnover ~ 2,
+        field_goal_attempt ~ 3,
+        assist ~ 4,
+        foul ~ 5,
+        substitution ~ 6,
+        free_throw ~ 7,
+        rebound ~ 8,
         T ~ 0
       )
     ) |>
@@ -427,16 +435,20 @@ ncaa_bb_pbp <- function(game_id) {
     # estimate number of points on play by looking at total score prior -> total score after
     dplyr::mutate(points_on_play = (away_score - dplyr::lag(away_score)) + (home_score - dplyr::lag(home_score))) |>
     # we do this odd ordering bit to make the substitutions a little easier
-    dplyr::arrange(ordering) |>
     dplyr::arrange(period_second,
                    period_first,
                    desc(minute),
                    desc(second),
-                   desc(centiseconds)) |>
+                   desc(centiseconds),
+                   ordering) |>
+    dplyr::group_by(time) |>
+    dplyr::mutate(has_fts = any(free_throw)) |>
+    dplyr::ungroup() |>
+    dplyr::filter(!(has_fts & dead_ball_rebound)) |>
     tidyr::fill(c(home_score, away_score), .direction = "down") |>
     dplyr::mutate(
       potential_points_on_play = as.integer(
-        stringi::stri_count_regex(desc, '2pt') * 2 + stringi::stri_count_regex(desc, '3pt') * 3 + stringi::stri_count_regex(desc, ' freethrow')
+        stringi::stri_count_regex(desc, '2pt| Two Point| Layup| Tip In| Dunk') * 2 + stringi::stri_count_regex(desc, '3pt| Three Point') * 3 + stringi::stri_count_regex(desc, ' freethrow| Free Throw')
       ),
       # extract player on play for lineups and joining
       player_on_play = trimws(
@@ -450,6 +462,7 @@ ncaa_bb_pbp <- function(game_id) {
       player_on_play = trimws(
         dplyr::case_when(
           toupper(trimws(player_on_play)) == 'TEAM' ~ NA_character_,
+          technical_foul ~ NA_character_,
           stringi::stri_detect_regex(player_on_play, ',') &
             pbp_version == 'V2' ~ gsub(',', '', sub(
               "(^.*),\\s(.*$)", "\\2 \\1", player_on_play
@@ -504,7 +517,7 @@ ncaa_bb_pbp <- function(game_id) {
             \(d)
             d |>
               dplyr::select(dplyr::starts_with('x_')) |>
-              dplyr::select(-dplyr::contains('x_NA')) |>
+              dplyr::select(-dplyr::any_of('x_NA')) |>
               (
                 \(f) which(f == 1, arr.ind = T) |>
                   as.data.frame() |>
