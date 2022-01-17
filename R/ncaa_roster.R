@@ -55,13 +55,13 @@ ncaa_rosters <- function(team_id) {
         '',
         stringi::stri_extract_all_regex(.x, '-[0-9]*', simplify = T)
       )), .names = 'height')) |>
-    dplyr::select(player, pos, year, games_played, games_started, any_of('height')) |>
+    dplyr::select(player, pos, year, games_played, games_started, any_of(c('height', 'jersey'))) |>
     dplyr::left_join(id_table,by=c('player')) |>
     dplyr::mutate(team_id = team_id,
                   team = roster_html |>
                     rvest::html_nodes(xpath='/html/body/div[2]/fieldset[1]/legend/a') |>
                     rvest::html_text()
                   ) |>
-    dplyr::select(team, team_id, player, player_id, pos, year, any_of('height'), games_played, games_started)
+    dplyr::select(team, team_id, player, player_id, pos, year, any_of(c('height', 'jersey')), games_played, games_started)
   return(roster)
 }
