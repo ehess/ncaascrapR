@@ -18,6 +18,7 @@
 ncaa_schedule <- function(team_id) {
   html_a <- glue::glue('https://stats.ncaa.org/teams/{team_id}') |>
     rvest::read_html()
+
   game_by_game_url <- html_a |>
     rvest::html_node('#contentarea') |>
     rvest::html_nodes('a') |>
@@ -26,9 +27,11 @@ ncaa_schedule <- function(team_id) {
       x[stringi::stri_detect(x, regex = 'player/game_by_game')]
     })() |>
     dplyr::first()
+
   html_b <-
     glue::glue('https://stats.ncaa.org/{game_by_game_url}') |>
     rvest::read_html()
+
   if(html_b |>
      rvest::html_text() != 'Unable to find player'){
     team_name <- html_b |>
@@ -106,18 +109,20 @@ ncaa_schedule <- function(team_id) {
                                 Result = NA,
                                 game_id = NA)
   }
-  opponent_id_table <- data.frame(opponent_id = html_a |>
-                                    rvest::html_node('body') |>
-                                    rvest::html_node('#contentarea') |>
-                                    rvest::html_node('table') |>
-                                    rvest::html_nodes('tr') |>
-                                    rvest::html_nodes('a') |>
-                                    rvest::html_attr('href') |>
-                                    (\(x) {
-                                      x[stringi::stri_detect(x, regex = 'teams/[0-9]*$')]
-                                    })() |>
-                                    stringi::stri_replace_all(regex = '/teams/', ''),
-                                  Opponent_Clean = html_a |>
+
+  year_format <- c("2013-14", "2014-15", "2015-16", "2016-17", "2017-18")
+
+  team_ids <- data.frame(id = html_a |> rvest::html_nodes(xpath = '//*[@id="year_list"]/option') |>
+                           rvest::html_attr("value"),
+                         year = html_a |> rvest::html_nodes(xpath = '//*[@id="year_list"]/option') |>
+                           rvest::html_text())
+
+  selected_year <- team_ids |>
+    dplyr::filter(id == team_id) |>
+    dplyr::select(year) |>
+    dplyr::first()
+
+  opponent_id_table <- data.frame(Opponent_Clean = html_a |>
                                     rvest::html_node('body') |>
                                     rvest::html_node('#contentarea') |>
                                     rvest::html_node('table') |>
@@ -126,13 +131,51 @@ ncaa_schedule <- function(team_id) {
                                     rvest::html_nodes('a') |>
                                     rvest::html_text() |>
                                     (\(x) {
-                                      x[!stringi::stri_detect(x, regex = '^[W|L|T] ([0-9]*)-([0-9]*)')]
+                                      x[!stringi::stri_detect(x, regex = '^[W|L|T] ([0-9]*)\\s*-\\s*([0-9]*)')]
                                     })() |>
                                     stringi::stri_replace_all(regex = '^#([0-9]*)', '') |>
-                                    trimws())
+                                    stringi::stri_replace_all(regex = '@\\s', '') |>
+                                    trimws(),
+                                  opponent_id = if(selected_year %in% year_format) { html_a |>
+                                      rvest::html_node('body') |>
+                                      rvest::html_node('#contentarea') |>
+                                      rvest::html_node('table') |>
+                                      rvest::html_nodes('tr') |>
+                                      rvest::html_nodes('a') |>
+                                      rvest::html_attr('href') |>
+                                      (\(x) {
+                                        x[stringi::stri_detect(x, regex = 'team/[0-9]*/[0-9]*$')]
+                                      })() |>
+                                      (\(x) { glue::glue('https://stats.ncaa.org{x}') })() |>
+                                      sapply(\(y) {
+                                        httr::GET(y, httr::add_headers("user-agent" = "Mozilla/5.0")) |>
+                                          (\(z) {
+                                            unlist(lapply(z$all_headers, function(x) {
+                                              x$headers$location
+                                            }))
+                                          })()
+                                      }) |>
+                                      stringi::stri_replace_all(regex = 'https://stats.ncaa.org/teams/', '')
+                                  } else {
+
+                                    html_a |>
+                                      rvest::html_node('body') |>
+                                      rvest::html_node('#contentarea') |>
+                                      rvest::html_node('table') |>
+                                      rvest::html_nodes('tr') |>
+                                      rvest::html_nodes('a') |>
+                                      rvest::html_attr('href') |>
+                                      (\(x) {
+                                        x[stringi::stri_detect(x, regex = 'teams/[0-9]*$')]
+                                      })() |>
+                                      stringi::stri_replace_all(regex = '/teams/', '')
+                                  }
+  )
+
   html_a |>
     xml2::xml_find_all(".//br") |>
     xml2::xml_add_sibling("p", "x_break")
+
   html_a |>
     rvest::html_node('body') |>
     rvest::html_node('#contentarea') |>
@@ -140,7 +183,12 @@ ncaa_schedule <- function(team_id) {
     rvest::html_node('tr') |>
     rvest::html_node('td') |>
     rvest::html_table() |>
-    dplyr::filter(Date != '') |>
+    plyr::rename(replace = c("X1" = "Date",
+                             "X2" = "Opponent",
+                             "X3" = "Result",
+                             "X4" = "Attendance"),
+                 warn_missing = FALSE) |>
+    dplyr::filter(Date != '' & Date != "Schedule/Results" & Date != "Date") |>
     dplyr::mutate(
       is_neutral = stringi::stri_detect(Opponent, regex = '(.+)\\@'),
       loc = dplyr::case_when(is_neutral ~ trimws(gsub(
@@ -204,21 +252,21 @@ ncaa_schedule <- function(team_id) {
         '-',
         '',
         dplyr::case_when(
-          home_team == team_name ~ stringi::stri_extract(Result, regex = '[0-9]*-'),
-          T ~ stringi::stri_extract(Result, regex = '-[0-9]*')
+          home_team == team_name ~ stringi::stri_extract(Result, regex = '[0-9]*\\s*-'),
+          T ~ stringi::stri_extract(Result, regex = '-\\s*[0-9]*')
         )
       )),
       away_score = as.integer(gsub(
         '-',
         '',
         dplyr::case_when(
-          away_team == team_name ~ stringi::stri_extract(Result, regex = '[0-9]*-'),
-          T ~ stringi::stri_extract(Result, regex = '-[0-9]*')
+          away_team == team_name ~ stringi::stri_extract(Result, regex = '[0-9]*\\s*-'),
+          T ~ stringi::stri_extract(Result, regex = '-\\s*[0-9]*')
         )
       )),
-      Attendance = suppressWarnings(as.integer(gsub(
+      Attendance = dplyr::across(.cols = any_of("Attendance"), ~ suppressWarnings(as.integer(gsub(
         ',', '', Attendance
-      ))),
+      )))),
       Result = trimws(
         stringi::stri_replace_all(Result, regex = '(\\(([0-9]* OT)\\))|(\\(([0-9]*OT)\\))', '')
       )
