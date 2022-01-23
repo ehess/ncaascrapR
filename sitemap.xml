@@ -19,9 +19,6 @@
     <loc>https://github.com/ehess/ncaascrapR/news/index.html</loc>
   </url>
   <url>
-    <loc>https://github.com/ehess/ncaascrapR/reference/get_team_schedule.html</loc>
-  </url>
-  <url>
     <loc>https://github.com/ehess/ncaascrapR/reference/index.html</loc>
   </url>
   <url>
@@ -53,6 +50,12 @@
   </url>
   <url>
     <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_game_info.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_rosters.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_schedule.html</loc>
   </url>
   <url>
     <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_vb_adv_box_score.html</loc>
