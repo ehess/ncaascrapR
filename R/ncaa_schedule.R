@@ -117,10 +117,17 @@ ncaa_schedule <- function(team_id) {
                          year = html_a |> rvest::html_nodes(xpath = '//*[@id="year_list"]/option') |>
                            rvest::html_text())
 
-  selected_year <- team_ids |>
-    dplyr::filter(id == team_id) |>
-    dplyr::select(year) |>
-    dplyr::first()
+  #Some sports, like men's tennis, don't have a year select input
+  #These will trigger the standard opponent ID formatting logic
+  selected_year <- if(nrow(team_ids) > 0) {
+    team_ids |>
+      dplyr::filter(id == team_id) |>
+      dplyr::select(year) |>
+      dplyr::first() |>
+      as.character()
+  } else {
+    ""
+  }
 
   opponent_id_table <- data.frame(Opponent_Clean = html_a |>
                                     rvest::html_node('body') |>
