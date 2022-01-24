@@ -22,11 +22,6 @@ fixing a very annoying edge case where a team wins jump ball
 then immediately loses it on a turnover
 for when we can't guess who has possession, we basically fill in the gaps
 based on who had possession before and after a play
-putting these columns on temporary hold, V1 PBP completely breaks them
-pos_team_change = pos_team_id != dplyr::lag(pos_team_id) | (pbp_version == 'V1' & grepl(X2,' Made')),
-pos_team_change = dplyr::case_when(is.na(pos_team_change) ~ FALSE,
-T ~ pos_team_change),
-pos_number = cumsum(pos_team_change\link{!is.na(pos_team_change)}) + 1,
 these are deliberately commented out for a few reasons:
 \enumerate{
 \item As stringer data, these designators are somewhat noisy

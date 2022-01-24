@@ -263,11 +263,11 @@ ncaa_bb_pbp <- function(game_id) {
         period == '1st Half' ~ period_seconds_remaining + 1200,
         T ~ period_seconds_remaining
       ),
-      #' putting these columns on temporary hold, V1 PBP completely breaks them
-      #' pos_team_change = pos_team_id != dplyr::lag(pos_team_id) | (pbp_version == 'V1' & grepl(X2,' Made')),
-      #' pos_team_change = dplyr::case_when(is.na(pos_team_change) ~ FALSE,
-      #'                                    T ~ pos_team_change),
-      #' pos_number = cumsum(pos_team_change[!is.na(pos_team_change)]) + 1,
+      # putting these columns on temporary hold, V1 PBP completely breaks them
+      # pos_team_change = pos_team_id != dplyr::lag(pos_team_id) | (pbp_version == 'V1' & grepl(X2,' Made')),
+      # pos_team_change = dplyr::case_when(is.na(pos_team_change) ~ FALSE,
+      #                                    T ~ pos_team_change),
+      # pos_number = cumsum(pos_team_change[!is.na(pos_team_change)]) + 1,
       desc = paste(X2, X4),
       # shot descriptors
       is_shot = grepl(
