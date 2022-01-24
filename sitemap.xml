@@ -25,10 +25,13 @@
     <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_bb_games.html</loc>
   </url>
   <url>
-    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_bb_player_box_score.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_bb_pbp.html</loc>
   </url>
   <url>
-    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_bb_team_box_score.html</loc>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_bb_player_box.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_bb_team_box.html</loc>
   </url>
   <url>
     <loc>https://github.com/ehess/ncaascrapR/reference/ncaa_fb_box_score.html</loc>
