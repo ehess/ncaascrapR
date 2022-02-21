@@ -831,58 +831,67 @@ ncaa_bb_pbp_parse <- function(box_html, pbp_html) {
     #' but i haven't seen any issues in practice
     dplyr::mutate(
       # any time we get messy pbp data and are unsure of who is on court, NA these values
-      across(dplyr::matches('player_([0-9]*)$'), ~ dplyr::case_when(!clean_play_check ~ NA_character_,
+      across(dplyr::matches('player_([0-9]*)$'), ~ dplyr::case_when(!clean_play_check ~ '',
                                                                     T ~ .x)),
       across(dplyr::matches('player_([0-9]*)$'), ~ gsub('x_', '', .)),
       across(
         dplyr::matches('player_([0-9]*)$'),
-        ~ plyr::mapvalues(
-          .,
-          from = rosters$player,
-          to = rosters$player_id,
-          warn_missing = F
-        ),
+        ~ (\(x){
+          df <- data.frame(player_orig = x, row_number = dplyr::row_number())
+          df |>
+            fuzzyjoin::stringdist_left_join(rosters, by = c("player_orig"="player"), max_dist = 3) |>
+            dplyr::pull(player_id)
+        })(.x),
         .names = '{.col}_id'
       ),
       across(
         dplyr::matches('player_([0-9]*)$'),
-        ~ plyr::mapvalues(
-          .,
-          from = rosters$player,
-          to = rosters$team_id,
-          warn_missing = F
-        ),
+        ~ (\(x){
+          df <- data.frame(player_orig = x, row_number = dplyr::row_number())
+          df |>
+            fuzzyjoin::stringdist_left_join(rosters, by = c("player_orig"="player"), max_dist = 3) |>
+            dplyr::pull(team_id)
+        })(.x),
         .names = '{.col}_team_id'
       ),
       across(
         dplyr::matches('player_([0-9]*)$'),
-        ~ plyr::mapvalues(
-          .,
-          from = rosters$player,
-          to = rosters$pos,
-          warn_missing = F
-        ),
+        ~ (\(x){
+          df <- data.frame(player_orig = x, row_number = dplyr::row_number())
+          df |>
+            fuzzyjoin::stringdist_left_join(rosters, by = c("player_orig"="player"), max_dist = 3) |>
+            dplyr::pull(pos)
+        })(.x),
         .names = '{.col}_pos'
       ),
-      player_on_play_id = plyr::mapvalues(
-        player_on_play,
-        from = rosters$player,
-        to = rosters$player_id,
-        warn_missing = F
-      ),
+      player_on_play = dplyr::case_when(is.na(player_on_play) ~ "",
+                                        T ~ player_on_play),
+      player_on_play_id = (\(x){
+        df <- data.frame(player_orig = x, row_number = dplyr::row_number())
+        df |>
+          fuzzyjoin::stringdist_left_join(rosters, by = c("player_orig"="player"), max_dist = 3) |>
+          dplyr::pull(player_id)
+      })(player_on_play),
       player_on_play_team_id = dplyr::case_when(X2 == "" ~ away_team_id,
                                                 X4 == "" ~ home_team_id,
                                                 T ~ NA_character_),
-      player_on_play_pos = plyr::mapvalues(
-        player_on_play,
-        from = rosters$player,
-        to = rosters$pos,
-        warn_missing = F
-      ),
+      player_on_play_pos = (\(x){
+        df <- data.frame(player_orig = x, row_number = dplyr::row_number())
+        df |>
+          fuzzyjoin::stringdist_left_join(rosters, by = c("player_orig"="player"), max_dist = 3) |>
+          dplyr::pull(pos)
+      })(player_on_play),
     ) |>
     #' some character encoding stuff, dropping players with mispelled names in
     #' the pbp
     dplyr::mutate(
+      dplyr::across(
+        dplyr::matches("player_([0-9]*)$"),
+        ~ dplyr::case_when(.x == "" ~ NA_character_,
+                           T ~ .x)
+      ),
+      player_on_play = dplyr::case_when(player_on_play == "" ~ NA_character_,
+                                        T ~ player_on_play),
       dplyr::across(
         dplyr::matches('player_(.*)_id'),
         ~ dplyr::case_when(
