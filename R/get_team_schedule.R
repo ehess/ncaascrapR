@@ -7,9 +7,23 @@
 #' @return a data frame with the following columns: date, game_id, home_team, home_team_id,
 #' away_team, away_team_id, home_score, away_score, is_neutral, details
 #' @export
-get_team_schedule <- function(team_id) {
-  html_a <- glue::glue('https://stats.ncaa.org/teams/{team_id}') |>
-    rvest::read_html()
+get_team_schedule <- function(team_id = NA_character_, team_url = NA_character_) {
+  if(is.na(team_id) & is.na(team_url)){
+    cli::cli_abort("Please specify one of `team_url` or `team_id`.")
+  } else if(!is.na(team_id) & !is.na(team_url)){
+    cli::cli_abort("Please specify only one of `team_url` or `team_id`.")
+  } else if(!is.na(team_id)){
+    html_a <- glue::glue('https://stats.ncaa.org/teams/{team_id}') |>
+      rvest::read_html()
+  } else {
+    html_a <- glue::glue('https://stats.ncaa.org/team/{team_url}') |>
+      rvest::read_html()
+  }
+  team_id <- html_a |>
+    rvest::html_node(xpath='//*[@id="sport_list"]') |>
+    rvest::html_nodes("option") |>
+    rvest::html_attr("value") |>
+    dplyr::first()
   game_by_game_url <- html_a |>
     rvest::html_node('#contentarea') |>
     rvest::html_nodes('a') |>
