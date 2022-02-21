@@ -4,7 +4,7 @@
 \alias{get_team_schedule}
 \title{get_team_schedule}
 \usage{
-get_team_schedule(team_id)
+get_team_schedule(team_id = NA_character_, team_url = NA_character_)
 }
 \arguments{
 \item{team_id}{the team ID for a given team}
