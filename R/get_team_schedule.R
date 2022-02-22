@@ -14,11 +14,17 @@ get_team_schedule <-
     } else if (!is.na(team_id) & !is.na(team_url)) {
       cli::cli_abort("Please specify only one of `team_url` or `team_id`.")
     } else if (!is.na(team_id)) {
-      html_a <- glue::glue('https://stats.ncaa.org/teams/{team_id}') |>
+      url <- glue::glue('https://stats.ncaa.org/teams/{team_id}')
+      url = url(url, "rb")
+      html_a <-  url |>
         rvest::read_html()
+      close(url)
     } else {
-      html_a <- glue::glue('https://stats.ncaa.org/team/{team_url}') |>
+      url <- glue::glue('https://stats.ncaa.org/team/{team_url}')
+      url = url(url, "rb")
+      html_a <-  url |>
         rvest::read_html()
+      close(url)
     }
     team_id <- html_a |>
       rvest::html_node(xpath = '//*[@id="sport_list"]') |>
@@ -33,9 +39,11 @@ get_team_schedule <-
         x[stringi::stri_detect(x, regex = 'player/game_by_game')]
       })() |>
       dplyr::first()
-    html_b <-
-      glue::glue('https://stats.ncaa.org/{game_by_game_url}') |>
+    url <- glue::glue('https://stats.ncaa.org/{game_by_game_url}')
+    url = url(url, "rb")
+    html_b <- url |>
       rvest::read_html()
+    close(url)
     team_name <- html_b |>
       rvest::html_node('body') |>
       rvest::html_node('#contentarea') |>
