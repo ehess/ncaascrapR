@@ -317,6 +317,10 @@ ncaa_bb_team_box_parse <- function(box_html) {
 #' @return a dataframe of cleaned, parsed, play-by-play data for the specified
 #' `game_id`
 ncaa_bb_pbp_parse <- function(box_html, pbp_html) {
+  game_id <- pbp_html |>
+    rvest::html_node(xpath = '/html/body/div[2]/div[3]/div/div/ul/li[1]/ul/li[3]/a') |>
+    rvest::html_attr('href') |>
+    (\(x) gsub('/game/box_score/','',x))()
   rosters <-
     box_html |> # generate a roster dataframe for both teams
     rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
@@ -383,7 +387,6 @@ ncaa_bb_pbp_parse <- function(box_html, pbp_html) {
         dplyr::select(player:pos)
     ) |>
     dplyr::mutate(player = toupper(gsub('\\.', '', player)))
-
   pbp <- pbp_html |> # fun times start here!
     rvest::html_nodes(xpath = '/html/body/div[2]') |>
     rvest::html_nodes('table') |>
@@ -728,7 +731,7 @@ ncaa_bb_pbp_parse <- function(box_html, pbp_html) {
       ),
       player_on_play = trimws(
         dplyr::case_when(
-          stringi::stri_detect_regex(toupper(trimws(player_on_play)), '^TEAM ') ~ NA_character_,
+          stringi::stri_detect_regex(toupper(trimws(player_on_play)), '^TEAM') ~ NA_character_,
           technical_foul ~ NA_character_,
           stringi::stri_detect_regex(player_on_play, ',') &
             pbp_version == 'V2' ~ gsub(',', '', sub(
