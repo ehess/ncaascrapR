@@ -48,6 +48,10 @@ ncaa_bb_calc_team_box_from_pbp <- function(pbp){
 #' @return a dataframe of cleaned, parsed player box data for the specified
 #' `game_id`
 ncaa_bb_player_box_parse <- function(box_html) {
+  game_id <- box_html |>
+    rvest::html_node(xpath = '/html/body/div[2]/div[3]/div/div/ul/li[3]/a') |>
+    rvest::html_attr('href') |>
+    (\(x) gsub('/game/play_by_play/','',x))()
   box_html |>
     rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
     rvest::html_table() |>
@@ -59,6 +63,7 @@ ncaa_bb_player_box_parse <- function(box_html) {
     dplyr::rename_with(\(x) "STL", dplyr::starts_with("ST")) |>
     dplyr::rename_with(\(x) "BLK", dplyr::starts_with("BLKS")) |>
     dplyr::mutate(
+      game_id = game_id,
       player = gsub(',','',sub("(^.*),\\s(.*$)","\\2 \\1", Player)),
       player_id = box_html |>
         rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
@@ -123,6 +128,7 @@ ncaa_bb_player_box_parse <- function(box_html) {
         dplyr::rename_with(\(x) "STL", dplyr::starts_with("ST")) |>
         dplyr::rename_with(\(x) "BLK", dplyr::starts_with("BLKS")) |>
         dplyr::mutate(
+          game_id = game_id,
           player = gsub(',','',sub("(^.*),\\s(.*$)","\\2 \\1", Player)),
           player_id = box_html |>
             rvest::html_node(xpath = '/html/body/div[2]/table[6]') |>
@@ -191,6 +197,10 @@ ncaa_bb_player_box_parse <- function(box_html) {
 #' @return a dataframe of cleaned, parsed team box data for the specified
 #' `game_id`
 ncaa_bb_team_box_parse <- function(box_html) {
+  game_id <- box_html |>
+    rvest::html_node(xpath = '/html/body/div[2]/div[3]/div/div/ul/li[3]/a') |>
+    rvest::html_attr('href') |>
+    (\(x) gsub('/game/play_by_play/','',x))()
   box_html |>
     rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
     rvest::html_table() |>
@@ -202,6 +212,7 @@ ncaa_bb_team_box_parse <- function(box_html) {
     dplyr::rename_with(\(x) "STL", dplyr::starts_with("ST")) |>
     dplyr::rename_with(\(x) "BLK", dplyr::starts_with("BLKS")) |>
     dplyr::mutate(
+      game_id = game_id,
       team = box_html |>
         rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
         rvest::html_node('.heading') |>
@@ -260,6 +271,7 @@ ncaa_bb_team_box_parse <- function(box_html) {
         dplyr::rename_with(\(x) "STL", dplyr::starts_with("ST")) |>
         dplyr::rename_with(\(x) "BLK", dplyr::starts_with("BLKS")) |>
         dplyr::mutate(
+          game_id = game_id,
           team = box_html |>
             rvest::html_node(xpath = '/html/body/div[2]/table[6]') |>
             rvest::html_node('.heading') |>
