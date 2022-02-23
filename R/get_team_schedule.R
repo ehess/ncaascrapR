@@ -155,66 +155,66 @@ get_team_schedule <-
         home_team_id,
         away_score,
         home_score
-      ) |>
-      dplyr::bind_rows(
-        html_b |>
-          rvest::html_node('body') |>
-          rvest::html_node('div#contentarea') |>
-          rvest::html_node('div#game_breakdown_div') |>
-          rvest::html_node('table') |>
-          rvest::html_node('tr') |>
-          rvest::html_node('td') |>
-          rvest::html_table() |>
-          dplyr::select(X1, X2, X3) |>
-          dplyr::filter(X3 == '-' | stringi::stri_detect_regex(X3,'^[0-9]')) |>
-          dplyr::mutate(
-            game_id = NA_character_,
-            is_neutral = stringi::stri_detect(X2, regex = '(.+)\\@'),
-            Opponent = stringi::stri_replace_all(X2, regex = '((?=(.*)) @ (.*)$)|(@ )', ''),
-            away_team = trimws(
-              dplyr::case_when(stringi::stri_detect(X2, regex = '^@') ~ team_name,
-                               T ~ Opponent)
-            ),
-            home_team = trimws(
-              dplyr::case_when(
-                !stringi::stri_detect(X2, regex = '^@') ~ team_name,
-                T ~ Opponent
-              )
-            ),
-            away_team_id = plyr::mapvalues(away_team, from = id_table$name, to = id_table$id, warn_missing = F),
-            home_team_id = plyr::mapvalues(home_team, from = id_table$name, to = id_table$id, warn_missing = F),
-            X3 = stringi::stri_replace_all(X3, regex = ' -', '-'),
-            X3 = stringi::stri_replace_all(X3, regex = '- ', '-'),
-            X3 = trimws(
-              stringi::stri_replace_all(X3, regex = '(\\(([0-9]* OT)\\))|(\\(([0-9]*OT)\\))', '')
-            ),
-            home_score = as.integer(gsub(
-              '-',
-              '',
-              dplyr::case_when(
-                home_team == team_name ~ stringi::stri_extract(X3, regex = '[0-9]*-'),
-                T ~ stringi::stri_extract(X3, regex = '-[0-9]*')
-              )
-            )),
-            away_score = as.integer(gsub(
-              '-',
-              '',
-              dplyr::case_when(
-                away_team == team_name ~ stringi::stri_extract(X3, regex = '[0-9]*-'),
-                T ~ stringi::stri_extract(X3, regex = '-[0-9]*')
-              )
-            ))
-          ) |>
-          dplyr::select(
-            Date = X1,
-            game_id,
-            is_neutral,
-            away_team,
-            home_team,
-            away_team_id,
-            home_team_id,
-            away_score,
-            home_score
-          )
-      )
+      ) # |>
+      # dplyr::bind_rows(
+      #   html_b |>
+      #     rvest::html_node('body') |>
+      #     rvest::html_node('div#contentarea') |>
+      #     rvest::html_node('div#game_breakdown_div') |>
+      #     rvest::html_node('table') |>
+      #     rvest::html_node('tr') |>
+      #     rvest::html_node('td') |>
+      #     rvest::html_table() |>
+      #     dplyr::select(X1, X2, X3) |>
+      #     dplyr::filter(X3 == '-' | stringi::stri_detect_regex(X3,'^[0-9]')) |>
+      #     dplyr::mutate(
+      #       game_id = NA_character_,
+      #       is_neutral = stringi::stri_detect(X2, regex = '(.+)\\@'),
+      #       Opponent = stringi::stri_replace_all(X2, regex = '((?=(.*)) @ (.*)$)|(@ )', ''),
+      #       away_team = trimws(
+      #         dplyr::case_when(stringi::stri_detect(X2, regex = '^@') ~ team_name,
+      #                          T ~ Opponent)
+      #       ),
+      #       home_team = trimws(
+      #         dplyr::case_when(
+      #           !stringi::stri_detect(X2, regex = '^@') ~ team_name,
+      #           T ~ Opponent
+      #         )
+      #       ),
+      #       away_team_id = plyr::mapvalues(away_team, from = id_table$name, to = id_table$id, warn_missing = F),
+      #       home_team_id = plyr::mapvalues(home_team, from = id_table$name, to = id_table$id, warn_missing = F),
+      #       X3 = stringi::stri_replace_all(X3, regex = ' -', '-'),
+      #       X3 = stringi::stri_replace_all(X3, regex = '- ', '-'),
+      #       X3 = trimws(
+      #         stringi::stri_replace_all(X3, regex = '(\\(([0-9]* OT)\\))|(\\(([0-9]*OT)\\))', '')
+      #       ),
+      #       home_score = as.integer(gsub(
+      #         '-',
+      #         '',
+      #         dplyr::case_when(
+      #           home_team == team_name ~ stringi::stri_extract(X3, regex = '[0-9]*-'),
+      #           T ~ stringi::stri_extract(X3, regex = '-[0-9]*')
+      #         )
+      #       )),
+      #       away_score = as.integer(gsub(
+      #         '-',
+      #         '',
+      #         dplyr::case_when(
+      #           away_team == team_name ~ stringi::stri_extract(X3, regex = '[0-9]*-'),
+      #           T ~ stringi::stri_extract(X3, regex = '-[0-9]*')
+      #         )
+      #       ))
+      #     ) |>
+      #     dplyr::select(
+      #       Date = X1,
+      #       game_id,
+      #       is_neutral,
+      #       away_team,
+      #       home_team,
+      #       away_team_id,
+      #       home_team_id,
+      #       away_score,
+      #       home_score
+      #     )
+      # )
   }
