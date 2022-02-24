@@ -8,6 +8,8 @@ get_team_schedule(team_id = NA_character_, team_url = NA_character_)
 }
 \arguments{
 \item{team_id}{the team ID for a given team}
+
+\item{team_url}{portion of team URL after /teams/}
 }
 \value{
 a data frame with the following columns: date, game_id, home_team, home_team_id,

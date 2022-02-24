@@ -4,6 +4,7 @@
 #' `bigballR` but does so more efficiently and quickly.
 #'
 #' @param team_id the team ID for a given team
+#' @param team_url portion of team URL after /teams/
 #' @return a data frame with the following columns: date, game_id, home_team, home_team_id,
 #' away_team, away_team_id, home_score, away_score, is_neutral, details
 #' @export

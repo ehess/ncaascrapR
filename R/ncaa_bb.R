@@ -590,10 +590,10 @@ ncaa_bb_pbp_parse <- function(box_html, pbp_html) {
         T ~ period_seconds_remaining
       ),
       #' putting these columns on temporary hold, V1 PBP completely breaks them
-      #' pos_team_change = pos_team_id != dplyr::lag(pos_team_id) | (pbp_version == 'V1' & grepl(X2,' Made')),
-      #' pos_team_change = dplyr::case_when(is.na(pos_team_change) ~ FALSE,
-      #'                                    T ~ pos_team_change),
-      #' pos_number = cumsum(pos_team_change[!is.na(pos_team_change)]) + 1,
+      # pos_team_change = pos_team_id != dplyr::lag(pos_team_id) | (pbp_version == 'V1' & grepl(X2,' Made')),
+      # pos_team_change = dplyr::case_when(is.na(pos_team_change) ~ FALSE,
+      #                                    T ~ pos_team_change),
+      # pos_number = cumsum(pos_team_change[!is.na(pos_team_change)]) + 1,
       desc = paste(X2, X4),
       # shot descriptors
       is_shot = grepl(
@@ -1008,6 +1008,7 @@ ncaa_bb_pbp_parse <- function(box_html, pbp_html) {
 #' * If "silent", the function will still check that the data is clean, but
 #'   will not display any warning or error message.
 #' This param defaults to "warn".
+#'
 #' @return a dataframe of cleaned, parsed play-by-play data for the specified
 #' `game_id`
 ncaa_bb_pbp <- function(game_id, dirty_data_behavior = "warn") {
