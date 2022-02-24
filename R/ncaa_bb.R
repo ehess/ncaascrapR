@@ -23,9 +23,9 @@ ncaa_bb_pbp_html <- function(game_id){
 #' @return a dataframe formatted identically to the data returned by `ncaa_bb_team_box`
 ncaa_bb_calc_team_box_from_pbp <- function(pbp){
   pbp |>
-    filter(!is.na(player_on_play_team_id)) |>
-    group_by(team_id = player_on_play_team_id) |>
-    summarize(fgm = sum(field_goal_made),
+    dplyr::filter(!is.na(player_on_play_team_id)) |>
+    dplyr::group_by(team_id = player_on_play_team_id) |>
+    dplyr::summarize(fgm = sum(field_goal_made),
               fga = sum(field_goal_attempt),
               tpm = sum(three_point_made),
               tpa = sum(three_point_attempt),
@@ -39,7 +39,7 @@ ncaa_bb_calc_team_box_from_pbp <- function(pbp){
               to = sum(turnover),
               stl = sum(steal),
               blk = sum(block)) |>
-    arrange(team_id)
+    dplyr::arrange(team_id)
 }
 
 #' @title ncaa_bb_player_box_parse
@@ -1019,14 +1019,15 @@ ncaa_bb_pbp <- function(game_id, dirty_data_behavior = "warn") {
   pbp <- ncaa_bb_pbp_parse(box_html, pbp_html)
   pbp_box <- ncaa_bb_calc_team_box_from_pbp(pbp)
   team_box <- ncaa_bb_team_box_parse(box_html) |>
-    select(c(team_id, fgm, fga, tpm, tpa, ftm, fta, pts, oreb, dreb, treb, ast, to, stl, blk)) |>
-    arrange(team_id)
+    dplyr::select(c(team_id, fgm, fga, tpm, tpa, ftm, fta, pts, oreb, dreb, treb, ast, to, stl, blk)) |>
+    dplyr::arrange(team_id)
   pbp$clean_game_check <- all(pbp_box == team_box)
   if(dirty_data_behavior == "warn" & !all(pbp_box == team_box)){
     cli::cli_alert_danger("Warning: inconsistencies detected between box score and PBP data for game_id {game_id}!")
   } else if(dirty_data_behavior == "error" & !all(pbp_box == team_box)){
     cli::cli_abort("Inconsistencies detected between box score and PBP data for game_id {game_id}!")
   }
+  return(pbp)
 }
 
 #' @title ncaa_bb_player_box
@@ -1051,6 +1052,6 @@ ncaa_bb_player_box <- function(game_id) {
 #' @return a dataframe for box score data for that game
 ncaa_bb_team_box <- function(game_id) {
   box_html <- ncaa_bb_box_html(game_id)
-  team_box <- ncaa_bb_player_box_parse(box_html)
+  team_box <- ncaa_bb_team_box_parse(box_html)
   return(team_box)
 }
