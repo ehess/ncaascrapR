@@ -2,7 +2,7 @@
 #' @description helper function to grab the raw html for a given game's box
 #' @param game_id a unique identifier for an NCAA BB game
 #' @returns an rvest html object
-ncaa_bb_box_html <- function(game_id){
+ncaa_bb_box_html <- function(game_id) {
   paste0('https://stats.ncaa.org/game/box_score/', game_id) |>
     rvest::read_html()
 }
@@ -11,7 +11,7 @@ ncaa_bb_box_html <- function(game_id){
 #' @description helper function to grab the raw html for a given game's pbp
 #' @param game_id a unique identifier for an NCAA bb game
 #' @returns an rvest html object
-ncaa_bb_pbp_html <- function(game_id){
+ncaa_bb_pbp_html <- function(game_id) {
   paste0('https://stats.ncaa.org/game/play_by_play/', game_id) |>
     rvest::read_html()
 }
@@ -21,24 +21,26 @@ ncaa_bb_pbp_html <- function(game_id){
 #' basketball games
 #' @param pbp a dataframe of pbp data created by `ncaa_bb_pbp`
 #' @return a dataframe formatted identically to the data returned by `ncaa_bb_team_box`
-ncaa_bb_calc_team_box_from_pbp <- function(pbp){
+ncaa_bb_calc_team_box_from_pbp <- function(pbp) {
   pbp |>
     dplyr::filter(!is.na(player_on_play_team_id)) |>
     dplyr::group_by(team_id = player_on_play_team_id) |>
-    dplyr::summarize(fgm = sum(field_goal_made),
-              fga = sum(field_goal_attempt),
-              tpm = sum(three_point_made),
-              tpa = sum(three_point_attempt),
-              ftm = sum(free_throw_made),
-              fta = sum(free_throw_attempt),
-              pts = sum(points_on_play),
-              oreb = sum(offensive_rebound),
-              dreb = sum(defensive_rebound),
-              treb = oreb + dreb,
-              ast = sum(assist),
-              to = sum(turnover),
-              stl = sum(steal),
-              blk = sum(block)) |>
+    dplyr::summarize(
+      fgm = sum(field_goal_made),
+      fga = sum(field_goal_attempt),
+      tpm = sum(three_point_made),
+      tpa = sum(three_point_attempt),
+      ftm = sum(free_throw_made),
+      fta = sum(free_throw_attempt),
+      pts = sum(points_on_play),
+      oreb = sum(offensive_rebound),
+      dreb = sum(defensive_rebound),
+      treb = oreb + dreb,
+      ast = sum(assist),
+      to = sum(turnover),
+      stl = sum(steal),
+      blk = sum(block)
+    ) |>
     dplyr::arrange(team_id)
 }
 
@@ -51,7 +53,7 @@ ncaa_bb_player_box_parse <- function(box_html) {
   game_id <- box_html |>
     rvest::html_node(xpath = '/html/body/div[2]/div[3]/div/div/ul/li[3]/a') |>
     rvest::html_attr('href') |>
-    (\(x) gsub('/game/play_by_play/','',x))()
+    (\(x) gsub('/game/play_by_play/', '', x))()
   player_id_a <- box_html |>
     rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
     rvest::html_nodes('a') |>
@@ -96,7 +98,7 @@ ncaa_bb_player_box_parse <- function(box_html) {
     dplyr::rename_with(\(x) "BLK", dplyr::starts_with("BLKS")) |>
     dplyr::mutate(
       game_id = game_id,
-      player = gsub(',','',sub("(^.*),\\s(.*$)","\\2 \\1", Player)),
+      player = gsub(',', '', sub("(^.*),\\s(.*$)", "\\2 \\1", Player)),
       player_id = player_id_a,
       team = box_html |>
         rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
@@ -108,7 +110,7 @@ ncaa_bb_player_box_parse <- function(box_html) {
         rvest::html_attr('href') |>
         (\(x) gsub('/teams/', '', x))() |>
         dplyr::nth(1),
-      across(.cols = everything(), ~gsub("\\*|\\-|\\/","",.x)),
+      across(.cols = everything(), ~ gsub("\\*|\\-|\\/", "", .x)),
       pos = Pos,
       min = lubridate::ms(MP, roll = T, quiet = T),
       fgm = as.integer(FGM),
@@ -152,7 +154,7 @@ ncaa_bb_player_box_parse <- function(box_html) {
         dplyr::rename_with(\(x) "BLK", dplyr::starts_with("BLKS")) |>
         dplyr::mutate(
           game_id = game_id,
-          player = gsub(',','',sub("(^.*),\\s(.*$)","\\2 \\1", Player)),
+          player = gsub(',', '', sub("(^.*),\\s(.*$)", "\\2 \\1", Player)),
           player_id = player_id_b,
           team = box_html |>
             rvest::html_node(xpath = '/html/body/div[2]/table[6]') |>
@@ -164,7 +166,7 @@ ncaa_bb_player_box_parse <- function(box_html) {
             rvest::html_attr('href') |>
             (\(x) gsub('/teams/', '', x))() |>
             dplyr::nth(2),
-          across(.cols = everything(), ~gsub("\\*|\\-|\\/","",.x)),
+          across(.cols = everything(), ~ gsub("\\*|\\-|\\/", "", .x)),
           pos = Pos,
           min = lubridate::ms(MP, roll = T, quiet =
                                 T),
@@ -214,7 +216,7 @@ ncaa_bb_team_box_parse <- function(box_html) {
   game_id <- box_html |>
     rvest::html_node(xpath = '/html/body/div[2]/div[3]/div/div/ul/li[3]/a') |>
     rvest::html_attr('href') |>
-    (\(x) gsub('/game/play_by_play/','',x))()
+    (\(x) gsub('/game/play_by_play/', '', x))()
   box_html |>
     rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
     rvest::html_table() |>
@@ -237,7 +239,7 @@ ncaa_bb_team_box_parse <- function(box_html) {
         rvest::html_attr('href') |>
         (\(x) gsub('/teams/', '', x))() |>
         dplyr::nth(1),
-      across(.cols = everything(), ~gsub("\\*|\\-|\\/","",.x)),
+      across(.cols = everything(), ~ gsub("\\*|\\-|\\/", "", .x)),
       min = lubridate::ms(MP, roll = T, quiet = T),
       fgm = as.integer(FGM),
       fga = as.integer(FGA),
@@ -296,7 +298,7 @@ ncaa_bb_team_box_parse <- function(box_html) {
             rvest::html_attr('href') |>
             (\(x) gsub('/teams/', '', x))() |>
             dplyr::nth(2),
-          across(.cols = everything(), ~gsub("\\*|\\-|\\/","",.x)),
+          across(.cols = everything(), ~ gsub("\\*|\\-|\\/", "", .x)),
           min = lubridate::ms(MP, roll = T, quiet =
                                 T),
           fgm = as.integer(FGM),
@@ -346,88 +348,135 @@ ncaa_bb_pbp_parse <- function(box_html, pbp_html) {
   game_id <- pbp_html |>
     rvest::html_node(xpath = '/html/body/div[2]/div[3]/div/div/ul/li[1]/ul/li[3]/a') |>
     rvest::html_attr('href') |>
-    (\(x) gsub('/game/box_score/','',x))()
+    (\(x) gsub('/game/box_score/', '', x))()
   rosters <-
-    data.frame(player = ifelse(length(box_html |> # grab NCAA player IDs
-                                        rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
-                                        rvest::html_nodes('a')), box_html |> # grab NCAA player IDs
-                 rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
-                 rvest::html_nodes('a') |>
-                 rvest::html_text() |>
-                 (\(x) gsub(',', '', sub("(^.*),\\s(.*$)", "\\2 \\1", x)))() |>
-                 stringi::stri_trans_general(id = "Latin-ASCII"),''),
-               player_id =  ifelse(length(box_html |> # grab NCAA player IDs
-                                            rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
-                                            rvest::html_nodes('a')), box_html |> # grab NCAA player IDs
-                 rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
-                 rvest::html_nodes('a') |>
-                 rvest::html_attr('href') |>
-                 (\(x) gsub(
-                   '_seq=',
-                   '',
-                   stringi::stri_extract_all_regex(x, '_seq=([0-9]*)$')
-                 ))(),''),
-               team = box_html |> # grab team
-                 rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
-                 rvest::html_node('.heading') |>
-                 rvest::html_text() |>
-                 trimws(),
-               team_id = box_html |> # grab ncaa team ID
-                 rvest::html_nodes(xpath = '/html/body/div[2]/table[1]/tr/td/a') |>
-                 rvest::html_attr('href') |>
-                 (\(x) gsub('/teams/', '', x))() |>
-                 dplyr::nth(1),
-               pos = ifelse(length(box_html |> # grab NCAA player IDs
-                                     rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
-                                     rvest::html_nodes('a')),box_html |>
-                 rvest::html_node(xpath = "/html/body/div[2]/table[5]") |>
-                 rvest::html_nodes(xpath = 'tr/td[count(tr/th[.="$Pos"]/preceding-sibling::th)+2]') |>
-                 rvest::html_text() |>
-                 (\(x) x[(c(1:length(box_html |> # grab NCAA player IDs
-                                       rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
-                                       rvest::html_nodes('a') |>
-                                       rvest::html_text())))])(),'')) |>
+    data.frame(
+      player = if(length(
+        box_html |> # grab NCAA player IDs
+        rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
+        rvest::html_nodes('a')
+      ) > 0){
+        box_html |> # grab NCAA player IDs
+          rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
+          rvest::html_nodes('a') |>
+          rvest::html_text() |>
+          (\(x) gsub(
+            ',', '', sub("(^.*),\\s(.*$)", "\\2 \\1", x)
+          ))() |>
+          stringi::stri_trans_general(id = "Latin-ASCII")
+      } else {
+        ''
+      },
+      player_id =  if(length(
+        box_html |> # grab NCAA player IDs
+        rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
+        rvest::html_nodes('a')
+      ) > 0) {
+        box_html |> # grab NCAA player IDs
+          rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
+          rvest::html_nodes('a') |>
+          rvest::html_attr('href') |>
+          (\(x) gsub(
+            '_seq=',
+            '',
+            stringi::stri_extract_all_regex(x, '_seq=([0-9]*)$')
+          ))()
+      } else {
+        ''
+      },
+      team = box_html |> # grab team
+        rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
+        rvest::html_node('.heading') |>
+        rvest::html_text() |>
+        trimws(),
+      team_id = box_html |> # grab ncaa team ID
+        rvest::html_nodes(xpath = '/html/body/div[2]/table[1]/tr/td/a') |>
+        rvest::html_attr('href') |>
+        (\(x) gsub('/teams/', '', x))() |>
+        dplyr::nth(1),
+      pos = if(length(
+        box_html |> # grab NCAA player IDs
+        rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
+        rvest::html_nodes('a')) > 0){
+        box_html |>
+          rvest::html_node(xpath = "/html/body/div[2]/table[5]") |>
+          rvest::html_nodes(xpath = 'tr/td[count(tr/th[.="$Pos"]/preceding-sibling::th)+2]') |>
+          rvest::html_text() |>
+          (\(x) x[(c(
+            1:length(
+              box_html |> # grab NCAA player IDs
+                rvest::html_node(xpath = '/html/body/div[2]/table[5]') |>
+                rvest::html_nodes('a') |>
+                rvest::html_text()
+            )
+          ))])()
+      } else {
+        ''
+      }) |>
     dplyr::bind_rows(
-      data.frame(player = ifelse(length(box_html |> # grab NCAA player IDs
-                                          rvest::html_node(xpath = '/html/body/div[2]/table[6]') |>
-                                          rvest::html_nodes('a')),box_html |> # grab NCAA player IDs
-                   rvest::html_node(xpath = '/html/body/div[2]/table[6]') |>
-                   rvest::html_nodes('a') |>
-                   rvest::html_text() |>
-                   (\(x) gsub(',', '', sub("(^.*),\\s(.*$)", "\\2 \\1", x)))() |>
-                   stringi::stri_trans_general(id = "Latin-ASCII"),''),
-                 player_id =  ifelse(length(box_html |> # grab NCAA player IDs
-                                              rvest::html_node(xpath = '/html/body/div[2]/table[6]') |>
-                                              rvest::html_nodes('a')),box_html |> # grab NCAA player IDs
-                   rvest::html_node(xpath = '/html/body/div[2]/table[6]') |>
-                   rvest::html_nodes('a') |>
-                   rvest::html_attr('href') |>
-                   (\(x) gsub(
-                     '_seq=',
-                     '',
-                     stringi::stri_extract_all_regex(x, '_seq=([0-9]*)$')
-                   ))(),''),
-                 team = box_html |>
-                   rvest::html_node(xpath = '/html/body/div[2]/table[6]') |>
-                   rvest::html_node('.heading') |>
-                   rvest::html_text() |>
-                   trimws(),
-                 team_id = box_html |>
-                   rvest::html_nodes(xpath = '/html/body/div[2]/table[1]/tr/td/a') |>
-                   rvest::html_attr('href') |>
-                   (\(x) gsub('/teams/', '', x))() |>
-                   dplyr::nth(2),
-                 pos = ifelse(length(box_html |> # grab NCAA player IDs
-                                       rvest::html_node(xpath = '/html/body/div[2]/table[6]') |>
-                                       rvest::html_nodes('a')),box_html |>
-                   rvest::html_node(xpath = "/html/body/div[2]/table[6]") |>
-                   rvest::html_nodes(xpath = 'tr/td[count(tr/th[.="$Pos"]/preceding-sibling::th)+2]') |>
-                   rvest::html_text() |>
-                   (\(x) x[(c(1:length(box_html |> # grab NCAA player IDs
-                                         rvest::html_node(xpath = '/html/body/div[2]/table[6]') |>
-                                         rvest::html_nodes('a') |>
-                                         rvest::html_text())))])(), ''))
-    ) |>
+      data.frame(
+        player = if(length(
+          box_html |> # grab NCAA player IDs
+          rvest::html_node(xpath = '/html/body/div[2]/table[6]') |>
+          rvest::html_nodes('a')
+        ) > 0){
+          box_html |> # grab NCAA player IDs
+            rvest::html_node(xpath = '/html/body/div[2]/table[6]') |>
+            rvest::html_nodes('a') |>
+            rvest::html_text() |>
+            (\(x) gsub(
+              ',', '', sub("(^.*),\\s(.*$)", "\\2 \\1", x)
+            ))() |>
+            stringi::stri_trans_general(id = "Latin-ASCII")
+        } else {
+          ''
+        },
+        player_id =  if(length(
+          box_html |> # grab NCAA player IDs
+          rvest::html_node(xpath = '/html/body/div[2]/table[6]') |>
+          rvest::html_nodes('a')
+        ) > 0) {
+          box_html |> # grab NCAA player IDs
+            rvest::html_node(xpath = '/html/body/div[2]/table[6]') |>
+            rvest::html_nodes('a') |>
+            rvest::html_attr('href') |>
+            (\(x) gsub(
+              '_seq=',
+              '',
+              stringi::stri_extract_all_regex(x, '_seq=([0-9]*)$')
+            ))()
+        } else {
+          ''
+        },
+        team = box_html |> # grab team
+          rvest::html_node(xpath = '/html/body/div[2]/table[6]') |>
+          rvest::html_node('.heading') |>
+          rvest::html_text() |>
+          trimws(),
+        team_id = box_html |> # grab ncaa team ID
+          rvest::html_nodes(xpath = '/html/body/div[2]/table[1]/tr/td/a') |>
+          rvest::html_attr('href') |>
+          (\(x) gsub('/teams/', '', x))() |>
+          dplyr::nth(2),
+        pos = if(length(
+          box_html |> # grab NCAA player IDs
+          rvest::html_node(xpath = '/html/body/div[2]/table[6]') |>
+          rvest::html_nodes('a')) > 0){
+          box_html |>
+            rvest::html_node(xpath = "/html/body/div[2]/table[6]") |>
+            rvest::html_nodes(xpath = 'tr/td[count(tr/th[.="$Pos"]/preceding-sibling::th)+2]') |>
+            rvest::html_text() |>
+            (\(x) x[(c(
+              1:length(
+                box_html |> # grab NCAA player IDs
+                  rvest::html_node(xpath = '/html/body/div[2]/table[6]') |>
+                  rvest::html_nodes('a') |>
+                  rvest::html_text()
+              )
+            ))])()
+        } else {
+          ''
+        })) |>
     dplyr::mutate(player = toupper(player))
   suppressWarnings({
     pbp <- pbp_html |> # fun times start here!
@@ -461,9 +510,11 @@ ncaa_bb_pbp_parse <- function(box_html, pbp_html) {
         pbp_version = ifelse(
           # we need to check for the PBP version, there are two different kinds, this affects things like regex
           pbp_html |>
-            rvest::html_node(xpath = 'body/div[2]/table[6]/tr[2]/td[2]') |>
-            rvest::html_text() |>
-            trimws() %in% c('jumpball startperiod', 'period start', 'game start'),
+            rvest::html_node(xpath = 'body/div[2]/table[6]') |>
+            rvest::html_table() |>
+            dplyr::pull(X3) |>
+            trimws() %in% c('jumpball startperiod', 'period start', 'game start') |>
+            any(),
           'V2',
           'V1'
         )
@@ -476,8 +527,10 @@ ncaa_bb_pbp_parse <- function(box_html, pbp_html) {
                                         T ~ centiseconds),
         milliseconds = centiseconds * 10,
         time = lubridate::period(minute = minute, second = second) + lubridate::milliseconds(milliseconds),
-        time = dplyr::case_when(X3 == 'Score' ~ lubridate::period(minute = 20, second = 0),
-                                T ~ time)
+        time = dplyr::case_when(
+          X3 == 'Score' ~ lubridate::period(minute = 20, second = 0),
+          T ~ time
+        )
       ) |>
       tidyr::separate(period,
                       c('period_first', 'period_second'),
@@ -561,14 +614,10 @@ ncaa_bb_pbp_parse <- function(box_html, pbp_html) {
               ' jumpball won| assist| 2pt| 3pt| rebound| freethrow| steal| turnover | jumpball lost| foul offensive',
               X4
             ) ~ home_team,
-            grepl(
-              ' block',
-              X2
-            ) ~ home_team,
-            grepl(
-              ' block',
-              X4
-            ) ~ away_team,
+            grepl(' block',
+                  X2) ~ home_team,
+            grepl(' block',
+                  X4) ~ away_team,
             T ~ NA_character_
           ),
           T ~ dplyr::case_when(
@@ -639,7 +688,8 @@ ncaa_bb_pbp_parse <- function(box_html, pbp_html) {
         two_point_made = grepl(" made", desc) & two_point_attempt,
         three_point_attempt = grepl('3pt| Three Point',
                                     desc),
-        three_point_made = grepl(" made",desc) & three_point_attempt,
+        three_point_made = grepl(" made", desc) &
+          three_point_attempt,
         jumpshot = grepl(' jumpshot| Jumper',
                          desc),
         #' these are deliberately commented out for a few reasons:
@@ -675,9 +725,12 @@ ncaa_bb_pbp_parse <- function(box_html, pbp_html) {
         assist = grepl(' assist| Assist',
                        desc),
         block = grepl('( block$)|( block )|( Block$)|( Block )|( Blocked Shot)',
-                      desc) & !field_goal_attempt, # prevents double counting blocks+
+                      desc) &
+          !field_goal_attempt,
+        # prevents double counting blocks+
         free_throw_attempt = grepl(' freethrow| Free Throw',
-                                   desc) & grepl(' made| missed', desc),
+                                   desc) &
+          grepl(' made| missed', desc),
         free_throw_made = grepl(" made", desc) & free_throw_attempt,
         one_and_one = grepl(' oneandone',
                             desc),
@@ -713,12 +766,18 @@ ncaa_bb_pbp_parse <- function(box_html, pbp_html) {
         # rebounding descriptors
         rebound = grepl(' rebound| Rebound',
                         desc),
-        offensive_rebound = grepl('( rebound offensive$)|( rebound offensive )| Offensive Rebound',
-                                  desc),
-        defensive_rebound = grepl('( rebound defensive$)|( rebound defensive )| Defensive Rebound',
-                                  desc),
-        dead_ball_rebound = grepl(' dead ball rebound|( rebound defensivedeadball$)|( rebound offensivedeadball$)|Deadball Rebound|deadball',
-                                  desc),
+        offensive_rebound = grepl(
+          '( rebound offensive$)|( rebound offensive )| Offensive Rebound',
+          desc
+        ),
+        defensive_rebound = grepl(
+          '( rebound defensive$)|( rebound defensive )| Defensive Rebound',
+          desc
+        ),
+        dead_ball_rebound = grepl(
+          ' dead ball rebound|( rebound defensivedeadball$)|( rebound offensivedeadball$)|Deadball Rebound|deadball',
+          desc
+        ),
         team_rebound = grepl(
           'rebound offensive team|rebound defensive team|TEAM Offensive Rebound|TEAM Defensive Rebound',
           desc
@@ -736,8 +795,8 @@ ncaa_bb_pbp_parse <- function(box_html, pbp_html) {
                                     desc),
         three_second_violation = grepl(' 3 seconds',
                                        desc),
-        offensive_goaltending = grepl( 'offensive goal tending',
-                                       desc),
+        offensive_goaltending = grepl('offensive goal tending',
+                                      desc),
         lane_violation = grepl(' lane violation',
                                desc),
         out_of_bounds = grepl(' out of bounds',
@@ -764,12 +823,27 @@ ncaa_bb_pbp_parse <- function(box_html, pbp_html) {
             pbp_version == 'V2' ~ gsub(',', '', stringi::stri_extract_all_regex(desc, '(.*),')),
             pbp_version == 'V1' &
               pbp_version == 'V1' &
-              stringi::stri_detect_regex(trimws(desc), '(\\b[A-Z\\\'\\.]+ \\b[A-Z\\\'\\.]+,\\b[A-Z\\\'\\.]+ )') ~ stringi::stri_extract_first_regex(trimws(desc), '(\\b[A-Z\\\'\\.]+ \\b[A-Z\\\'\\.]+,\\b[A-Z\\\'\\.]+ )'),
+              stringi::stri_detect_regex(
+                trimws(desc),
+                '(\\b[A-Z\\\'\\.]+ \\b[A-Z\\\'\\.]+,\\b[A-Z\\\'\\.]+ )'
+              ) ~ stringi::stri_extract_first_regex(
+                trimws(desc),
+                '(\\b[A-Z\\\'\\.]+ \\b[A-Z\\\'\\.]+,\\b[A-Z\\\'\\.]+ )'
+              ),
             pbp_version == 'V1' &
               stringi::stri_detect_regex(trimws(desc), '(\\b[A-Z\\\'\\.]+,\\b[A-Z\\\'\\.]+ )') ~ stringi::stri_extract_first_regex(trimws(desc), '(\\b[A-Z\\\'\\.]+,\\b[A-Z\\\'\\.]+ )'),
             pbp_version == 'V1' &
-              stringi::stri_detect_regex(trimws(desc), '(\\b[A-Z\\\'\\.]+ \\b[A-Z\\\'\\.]+ \\b[A-Z\\\'\\.]+ )') ~ stringi::stri_extract_first_regex(trimws(desc), '\\b[A-Z\\\'\\.]+ \\b[A-Z\\\'\\.]+ \\b[A-Z\\\'\\.]+ '),
-            T ~  stringi::stri_extract_first_regex(trimws(desc), '(\\b[A-Z][A-z\\\'\\.]+ \\b[A-Z][A-z\\\'\\.]+ )')
+              stringi::stri_detect_regex(
+                trimws(desc),
+                '(\\b[A-Z\\\'\\.]+ \\b[A-Z\\\'\\.]+ \\b[A-Z\\\'\\.]+ )'
+              ) ~ stringi::stri_extract_first_regex(
+                trimws(desc),
+                '\\b[A-Z\\\'\\.]+ \\b[A-Z\\\'\\.]+ \\b[A-Z\\\'\\.]+ '
+              ),
+            T ~  stringi::stri_extract_first_regex(
+              trimws(desc),
+              '(\\b[A-Z][A-z\\\'\\.]+ \\b[A-Z][A-z\\\'\\.]+ )'
+            )
           )
         ),
         player_on_play = trimws(
@@ -822,7 +896,6 @@ ncaa_bb_pbp_parse <- function(box_html, pbp_html) {
       dplyr::group_by(period) |>
       dplyr::group_modify( ~ (
         \(a) {
-          # browser()
           cbind(
             a,
             a |>
@@ -853,17 +926,18 @@ ncaa_bb_pbp_parse <- function(box_html, pbp_html) {
               )) |>
               # finally we collapse the values down into a string of who is on court
               (
-                \(d)
-                d |>
-                  dplyr::select(dplyr::starts_with('x_')) |>
-                  dplyr::select(-dplyr::any_of('x_NA')) |>
-                  (
-                    \(f) which(f == 1, arr.ind = T) |>
-                      as.data.frame() |>
-                      dplyr::group_by(row) |>
-                      dplyr::summarize(on_court = paste0(colnames(f)[unlist(list(col))], collapse =
-                                                           ','))
-                  )()
+                \(d) {
+                  d |>
+                    dplyr::select(dplyr::starts_with('x_')) |>
+                    dplyr::select(-dplyr::any_of('x_NA')) |>
+                    (
+                      \(f) which(f == 1, arr.ind = T) |>
+                        as.data.frame() |>
+                        dplyr::group_by(row) |>
+                        dplyr::summarize(on_court = paste0(colnames(f)[unlist(list(col))], collapse =
+                                                             ','))
+                    )()
+                }
               )()
           )
         }
@@ -1064,20 +1138,41 @@ ncaa_bb_pbp_parse <- function(box_html, pbp_html) {
 #' @return a dataframe of cleaned, parsed play-by-play data for the specified
 #' `game_id`
 ncaa_bb_pbp <- function(game_id, dirty_data_behavior = "warn") {
-  if(!(dirty_data_behavior %in% c("warn","error","silent"))){
-    cli::cli_abort('Please specify a valid behavior for `dirty_data_behavior`, one of "error","warn", or "silent".')
+  if (!(dirty_data_behavior %in% c("warn", "error", "silent"))) {
+    cli::cli_abort(
+      'Please specify a valid behavior for `dirty_data_behavior`, one of "error","warn", or "silent".'
+    )
   }
   pbp_html <- ncaa_bb_pbp_html(game_id)
   box_html <- ncaa_bb_box_html(game_id)
   pbp <- ncaa_bb_pbp_parse(box_html, pbp_html)
   pbp_box <- ncaa_bb_calc_team_box_from_pbp(pbp)
   team_box <- ncaa_bb_team_box_parse(box_html) |>
-    dplyr::select(c(team_id, fgm, fga, tpm, tpa, ftm, fta, pts, oreb, dreb, treb, ast, to, stl, blk)) |>
+    dplyr::select(c(
+      team_id,
+      fgm,
+      fga,
+      tpm,
+      tpa,
+      ftm,
+      fta,
+      pts,
+      oreb,
+      dreb,
+      treb,
+      ast,
+      to,
+      stl,
+      blk
+    )) |>
     dplyr::arrange(team_id)
   pbp$clean_game_check <- all(pbp_box == team_box)
-  if(dirty_data_behavior == "warn" & !all(pbp_box == team_box)){
-    cli::cli_alert_danger("Warning: inconsistencies detected between box score and PBP data for game_id {game_id}!")
-  } else if(dirty_data_behavior == "error" & !all(pbp_box == team_box)){
+  if (dirty_data_behavior == "warn" & !all(pbp_box == team_box)) {
+    cli::cli_alert_danger(
+      "Warning: inconsistencies detected between box score and PBP data for game_id {game_id}!"
+    )
+  } else if (dirty_data_behavior == "error" &
+             !all(pbp_box == team_box)) {
     cli::cli_abort("Inconsistencies detected between box score and PBP data for game_id {game_id}!")
   }
   return(pbp)
