@@ -96,6 +96,7 @@ ncaa_bb_player_box_parse <- function(box_html) {
     dplyr::rename_with(\(x) "DRebs", dplyr::starts_with("Def Reb")) |>
     dplyr::rename_with(\(x) "STL", dplyr::starts_with("ST")) |>
     dplyr::rename_with(\(x) "BLK", dplyr::starts_with("BLKS")) |>
+    dplyr::rename_with(\(x) "Fouls", dplyr::starts_with("PF")) |>
     dplyr::mutate(
       game_id = game_id,
       player = gsub(',', '', sub("(^.*),\\s(.*$)", "\\2 \\1", Player)),
@@ -152,6 +153,7 @@ ncaa_bb_player_box_parse <- function(box_html) {
         dplyr::rename_with(\(x) "DRebs", dplyr::starts_with("Def Reb")) |>
         dplyr::rename_with(\(x) "STL", dplyr::starts_with("ST")) |>
         dplyr::rename_with(\(x) "BLK", dplyr::starts_with("BLKS")) |>
+        dplyr::rename_with(\(x) "Fouls", dplyr::starts_with("PF")) |>
         dplyr::mutate(
           game_id = game_id,
           player = gsub(',', '', sub("(^.*),\\s(.*$)", "\\2 \\1", Player)),
@@ -227,6 +229,7 @@ ncaa_bb_team_box_parse <- function(box_html) {
     dplyr::rename_with(\(x) "DRebs", dplyr::starts_with("Def Reb")) |>
     dplyr::rename_with(\(x) "STL", dplyr::starts_with("ST")) |>
     dplyr::rename_with(\(x) "BLK", dplyr::starts_with("BLKS")) |>
+    dplyr::rename_with(\(x) "Fouls", dplyr::starts_with("PF")) |>
     dplyr::mutate(
       game_id = game_id,
       team = box_html |>
@@ -286,6 +289,7 @@ ncaa_bb_team_box_parse <- function(box_html) {
         dplyr::rename_with(\(x) "DRebs", dplyr::starts_with("Def Reb")) |>
         dplyr::rename_with(\(x) "STL", dplyr::starts_with("ST")) |>
         dplyr::rename_with(\(x) "BLK", dplyr::starts_with("BLKS")) |>
+        dplyr::rename_with(\(x) "Fouls", dplyr::starts_with("PF")) |>
         dplyr::mutate(
           game_id = game_id,
           team = box_html |>
